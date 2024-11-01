@@ -1,0 +1,72 @@
+- name: Cleanup resources for specified Instance (free tier)
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "../host_vars/all.yml"
+  vars:
+    tag_name: ""
+    security_group_name: ""
+    time: "{{ time | default(10) }}"
+  tasks:
+    - name: Pause for X minutes
+      pause:
+        minutes: "{{ time }}"
+        
+    - name: Find EC2 Instances by Tag
+      amazon.aws.ec2_instance_info:
+        filters:
+          "tag:Name": "{{ tag_name }}"
+          "instance-state-name": "running"
+        region: "{{ aws_region }}"
+      register: ec_instances
+    - name: Terminate EC2 Instances
+      amazon.aws.ec2_instance:
+        instance_ids: "{{ item.instance_id }}"
+        state: absent
+        region: "{{ aws_region }}"
+      loop: "{{ ec_instances.instances }}"
+      register: terminated_instances
+    - name: Wait for instances to terminate
+      amazon.aws.ec2_instance_info:
+        instance_ids: "{{ item.instance_id }}"
+        region: "{{ aws_region }}"
+      register: instance_status
+      until: instance_status.instances[0].state.name == 'terminated'
+      retries: 10
+      delay: 15
+      loop: "{{ terminated_instances.results }}"
+
+    - name: Detach and Delete any Unused Volumes
+      amazon.aws.ec2_vol_info:
+        filters:
+          "attachment.instance-id": "{{ item.instance_id }}"
+        region: "{{ aws_region }}"
+      loop: "{{ ec_instances.instances }}"
+      register: dvolumes
+    - name: Delete detached EBS volumes
+      amazon.aws.ec2_vol:
+        volume_id: "{{ item.volume_id }}"
+        state: absent
+        region: "{{ aws_region }}"
+      loop: "{{ dvolumes.volumes }}"
+      when: item.state == 'available'
+
+    - name: Release Elastic IPs associated with Instances
+      amazon.aws.ec2_eip:
+        region: "{{ aws_region }}"
+        state: absent
+        device_id: "{{ item.instance_id }}"
+      loop: "{{ ec_instances.instances }}"
+      when: item.public_ip is defined
+
+    - name: Gather Security Group Information
+      amazon.aws.ec2_security_group_info:
+        filters:
+          "group-name": "{{ security_group_name }}"
+        region: "{{ aws_region }}"
+      register: security_group_info
+    - name: Remove Security Group
+      amazon.aws.ec2_security_group:
+        group_id: "{{ security_group_info.security_groups[0].group_id }}"
+        state: absent
+        region: "{{ aws_region }}"
