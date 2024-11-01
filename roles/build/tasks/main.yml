@@ -1,0 +1,82 @@
+- name: Install required system packages
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-pip
+      - virtualenv
+      - python3-setuptools
+      - awscli
+    state: latest
+    update_cache: true
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+- name: Add Docker Repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu jammy stable
+    state: present
+- name: Update apt and install docker-ce
+  apt:
+    name: docker-ce
+    state: latest
+    update_cache: true
+- name: Install Docker Module for Python
+  pip:
+    name: docker
+- name: Ensure Docker is started
+  service:
+    name: docker
+    state: started
+    enabled: true
+- name: Ensure /tmp/maven_build directory exists on build_host
+  file:
+    path: /tmp/maven_build
+    state: directory
+    mode: "0755"
+- name: Copy Dockerfile and context to build server
+  ansible.builtin.copy:
+    src: files/Dockerfile
+    dest: /tmp/Dockerfile
+    force: yes
+- name: Build Docker image
+  community.docker.docker_image:
+    name: maven_build
+    tag: "{{ ansible_date_time.date }}_{{ ansible_date_time.time }}"
+    build:
+      path: /tmp/
+      dockerfile: Dockerfile
+    source: build
+    labels:
+      version: 1.0-{{ ansible_date_time.date }}_{{ ansible_date_time.time }}
+      description: Maven_build_image
+    state: present
+- name: Run Maven build
+  community.docker.docker_container:
+    name: maven_build_container
+    image: maven_build:{{ ansible_date_time.date }}_{{ ansible_date_time.time }}
+    state: started
+    recreate: true
+    volumes:
+      - /tmp/maven_build:/tmp/maven/target
+    working_dir: /tmp/maven
+    command: mvn package
+- name: Check container state
+  community.docker.docker_container_info:
+    name: maven_build_container
+  until: container_info.container.State.Status == 'exited'
+  register: container_info
+  retries: 15
+  delay: 10
+- name: Rename WAR file with timestamp
+  command: "mv /tmp/maven_build/hello-1.0.war /tmp/maven_build/hello-1.0_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.war"
+- name: Upload WAR file to S3
+  amazon.aws.s3_object:
+    bucket: "{{ s3_bucket }}"
+    object: "/artifacts/hello-1.0_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.war"
+    src: "/tmp/maven_build/hello-1.0_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.war"
+    mode: put
+    region: "{{ aws_region }}"
