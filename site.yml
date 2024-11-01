@@ -1,0 +1,90 @@
+---
+# Master playbook to manage workflow by importing modular playbooks
+
+# 1 - Check AWS Free Tier usage for EC2, EBS, S3, Data Transfer, Elastic IP, and KMS
+- import_playbook: playbooks/1_check_free_tier_aws.yml
+  tags:
+    - free_tier_check
+    
+# 2 - Create S3 bucket "s3_bucket" and dirs "info_ec2" and "artifacts" inside 
+- import_playbook: playbooks/2_setup_s3.yml
+  tags:
+    - s3_setup
+    
+# 3 - Create AWS IAM policy "iam_policy_name" and role "iam_role_name" with access from EC2 to S3 bucket "s3_bucket"
+- import_playbook: playbooks/3_setup_iam.yml
+  tags:
+    - iam_setup
+    
+# 4 - Create EC2 Key Pair "aws_key_name" for Ansible Access and store it at "aws_ssh_private_key_file" by "create_key" tag or upload existing key to AWS by "upload_key" tag
+- import_playbook: playbooks/4_aws_key_management.yml
+  tags:
+    - key_management
+    
+# 5 - Create and Configure Dynamic Security Group (only 1 IP address and ports 22/80 for public) and Create and Configure 2 EC2 Instances (build-server and prod-server) with type "instance_type" and image "image_id", role "iam_role_name" and VPC "vpc_id", add them to in-memory dynamic Ansible inventory. Also add info about new EC2 Instances on localhost
+- import_playbook: playbooks/5_setup_ec2_instances.yml
+  tags:
+    - ec2_instances
+    
+# 6 - Configure Build Server by "build" Ansible role - install docker, build and run docker image to build maven artifact, upload WAR artifact to S3 "s3_bucket"
+- import_playbook: playbooks/6_build_server.yml
+  tags:
+    - build_server
+    
+# Optionally terminate Build Server and Clean up its Resources in AWS (FREE!) in 5 minutes
+- import_playbook: playbooks/8_terminate_ec2.yml
+  vars:
+    tag_name: "build-server"
+    security_group_name: "build-sg-01"
+    time: 5
+  tags:
+    - never
+    - terminate_build
+    
+# Optionally stop Build Server (PAID!) 
+- import_playbook: playbooks/9_stop_ec2.yml
+  vars:
+    ec2_instance_name: "build-server"
+    time: 5
+  tags:
+    - never
+    - stop_build
+    
+# 7 - Configure Prod Server by "deploy" Ansible role -- install docker, download WAR artifact from S3 "s3_bucket", build and run docker image with the built artifact from S3
+- import_playbook: playbooks/7_production_server.yml
+  tags:
+    - production_server
+    
+# Mesage about application URL
+- name: Output application access URL
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Display application URL
+      debug:
+        msg: "The application should be available at http://{{ec2_prod.instances[0].public_ip }}:80/hello-1.0/"
+          
+# Optionally terminate Prod Server and Clean up its Resources in AWS (FREE!) in 60 minutes
+- import_playbook: playbooks/8_terminate_ec2.yml
+  vars:
+    tag_name: "prod-server"
+    security_group_name: "prod-sg-01"
+    time: 60
+  tags:
+    - never
+    - terminate_prod
+    
+# Optionally stop Prod Server (PAID!) 
+- import_playbook: playbooks/9_stop_ec2.yml
+  vars:
+    ec2_instance_name: "prod-server"
+    time: 5
+  tags:
+    - never
+    - stop_prod
+    
+#Optionally terminate AWS IAM policy and role/ssh-key/S3 bucket
+- import_playbook: playbooks/10_cleanup_aws.yml
+  tags:
+    - never
+    - cleanup_aws
