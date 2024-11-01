@@ -1,0 +1,66 @@
+---
+- name: Check AWS Free Tier usage for EC2, EBS, S3, Data Transfer, Elastic IP, and KMS
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Get Free Tier usage details
+      shell: |
+        aws freetier get-free-tier-usage --query "freeTierUsages[].[service, usageType, actualUsageAmount, forecastedUsageAmount, limit]" --output json
+      register: free_tier_usage
+      changed_when: false
+    - name: Parse and structure Free Tier usage data
+      set_fact:
+        free_tier_data: "{{ free_tier_usage.stdout | from_json }}"
+    - name: Check each usageType for Free Tier limit exceedance
+      vars:
+        exceeded_usages: []
+      block:
+        - name: Check EC2 Instance Hours (t2.micro) Free Tier limit (+4 hours)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+          loop: "{{ free_tier_data }}"
+          when: item[1] == 'BoxUsage:freetier.micro' and (item[2] | float + 4 > item[4] | float or item[3] | float + 4 > item[4] | float)
+        - name: Check EBS Storage Free Tier limit (+16 GB)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+          loop: "{{ free_tier_data }}"
+          when: item[1] == 'EBS:VolumeUsage' and (item[2] | float + 16 > item[4] | float or item[3] | float + 16 > item[4] | float)
+        - name: Check Elastic IP Hours Free Tier limit (+4 hours)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+          loop: "{{ free_tier_data }}"
+          when: item[1] == 'PublicIPv4:InUseAddress' and (item[2] | float + 4 > item[4] | float or item[3] | float + 4 > item[4] | float)
+        - name: Check S3 Data Transfer Free Tier limit (+ 0.5 GB)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+          loop: "{{ free_tier_data }}"
+          when: item[1] == 'DataTransfer-Out-Bytes' and (item[2] | float + 0.5 > item[4] | float or item[3] | float + 0.5 > item[4] | float)
+        - name: Check S3 Requests (Tier 1 and Tier 2) Free Tier limits (+6 requests)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+          loop: "{{ free_tier_data }}"
+          when: (item[1] == 'Requests-Tier1' and (item[2] | float + 6 > item[4] | float or item[3] | float + 6 > item[4] | float)) or (item[1] == 'Requests-Tier2' and (item[2] | float + 6 > item[4] | float or item[3] | float + 6 > item[4] | float))
+        - name: Check KMS Requests Free Tier limit (+ 3 requests)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+          loop: "{{ free_tier_data }}"
+          when: item[1] == 'KMS-Requests' and (item[2] | float + 3 > item[4] | float or item[3] | float + 3 > item[4] | float)
+        - name: Output messages for exceeded Free Tier limits
+          fail:
+            msg: >
+              The following Free Tier limits have been exceeded or will be exceed:
+              {% for usage in exceeded_usages %}
+              - Service: {{ usage.service }}, UsageType: {{ usage.usageType }},
+                Actual Usage: {{ usage.actual }}, Forecasted Usage: {{ usage.forecasted }},
+                Limit: {{ usage.limit }}
+              {% endfor %}
+          when: exceeded_usages | length > 0
+    - name: Check current S3 storage usage
+      shell: |
+        aws s3api list-objects-v2 --bucket {{ s3_bucket }} --query "Contents[].Size" --output text | awk '{sum += $1} END {print sum / (1024 * 1024 * 1024)}'
+      register: s3_storage_usage
+      changed_when: false
+    - name: Fail if S3 storage usage + 500MB exceeds 5 GB Free Tier limit
+      fail:
+        msg: "Warning: S3 storage usage exceeds Free Tier 5 GB limit. Current usage: {{ s3_storage_usage.stdout }} GB."
+      when: s3_storage_usage.stdout | float + 0.5 > 5
