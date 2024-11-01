@@ -1,0 +1,22 @@
+---
+- name: Create S3 Bucket and Directories
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "../host_vars/all.yml"
+  tasks:
+    - name: Create S3 Bucket
+      amazon.aws.aws_s3_bucket:
+        name: "{{ s3_bucket }}"
+        region: "{{ aws_region }}"
+        delete_public_access: true
+        state: present
+    - name: Create S3 folders
+      amazon.aws.s3_object:
+        bucket: "{{ s3_bucket }}"
+        object: "{{ item }}/"
+        region: "{{ aws_region }}"
+        mode: create
+      loop:
+        - info_ec2
+        - artifacts
