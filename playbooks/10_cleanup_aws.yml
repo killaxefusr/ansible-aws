@@ -1,0 +1,54 @@
+- name: Cleanup resources in AWS (Role/Policy/Keypair/S3)
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "../host_vars/all.yml"
+  tasks:
+# Delete IAM Role and Policy
+    - name: Keep the IAM role created above but remove all managed policies
+      amazon.aws.iam_role:
+        name: "{{ iam_role_name }}"
+        assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
+        purge_policies: true
+        managed_policies: []
+    - name: Remove an existing IAM Managed Policy
+      amazon.aws.iam_managed_policy:
+        policy_name: "{{ iam_policy_name }}"
+        state: absent
+    - name: Delete the IAM role
+      amazon.aws.iam_role:
+        name: "{{ iam_role_name }}"
+        assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
+        state: absent
+# Delete SSH key from localhost after AWS deletion
+    - name: Delete AWS key pair
+      amazon.aws.ec2_key:
+        name: "{{ aws_key_name }}"
+        region: "{{ aws_region }}"
+        state: absent
+      register: key_deleted
+    - name: Remove SSH key file from localhost
+      ansible.builtin.file:
+        path: "{{ aws_ssh_private_key_file }}"
+        state: absent
+      when: key_deleted.changed
+# Delete S3 bucket and all objects inside
+    - name: List all objects in S3 bucket for deleting
+      amazon.aws.s3_bucket_info:
+        name: "{{ s3_bucket }}"
+        region: "{{ aws_region }}"
+      register: bucket_objects
+    - name: Delete all objects in S3 bucket
+      amazon.aws.s3_object:
+        bucket: "{{ s3_bucket }}"
+        object: "{{ item.key }}"
+        state: delobj
+        region: "{{ aws_region }}"
+      loop: "{{ bucket_objects.objects }}"
+      when: bucket_objects.objects is defined and bucket_objects.objects | length > 0
+    - name: Delete S3 bucket
+      amazon.aws.aws_s3_bucket:
+        name: "{{ s3_bucket }}"
+        state: absent
+        region: "{{ aws_region }}"
+        force: true
