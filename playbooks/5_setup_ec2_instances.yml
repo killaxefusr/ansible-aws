@@ -1,0 +1,138 @@
+---
+- name: Create and Configure EC2 Instances with Dynamic Security Group
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "../host_vars/all.yml"
+  tasks:
+    - name: Get external IP address of Ansible
+      uri:
+        url: http://checkip.amazonaws.com
+        return_content: true
+      register: external_ip
+      retries: 3
+      delay: 10
+    - name: Create security group with dynamic CIDR for build server
+      amazon.aws.ec2_security_group:
+        name: build-sg-01
+        description: Allow SSH and HTTP from dynamic IP
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc_id }}"  #make sure your VPC assign public ip automatically, like default VPC
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: "{{ external_ip.content | trim }}/32"
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+        state: present
+      register: security_group_b
+    - name: Create security group with dynamic CIDR for prod server
+      amazon.aws.ec2_security_group:
+        name: prod-sg-01
+        description: Allow SSH and HTTP from dynamic IP
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc_id }}"
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: "{{ external_ip.content | trim }}/32"
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: "{{ external_ip.content | trim }}/32"
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+        state: present
+      register: security_group_p
+    - name: Launch EC2 instance 1 (build)
+      amazon.aws.ec2_instance:
+        key_name: "{{ aws_key_name }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ image_id }}"
+        wait: true
+        state: started
+        region: "{{ aws_region }}"
+        security_group: "{{ security_group_b.group_id }}"
+        iam_instance_profile: "{{ iam_role_name }}"
+        tags:
+          Name: build-server
+          Environment: build
+        network:
+          assign_public_ip: true
+          delete_on_termination: true
+        volumes:
+          - device_name: /dev/xvda
+            ebs:
+              volume_size: 8  # Keep disk size minimal, within 30 GB across volumes
+              volume_type: gp3  # or gp2 (both included in free tier limit)
+              delete_on_termination: true
+        count: 1
+      register: ec2_build
+    - name: Launch EC2 instance 2 (production)
+      amazon.aws.ec2_instance:
+        key_name: "{{ aws_key_name }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ image_id }}"
+        wait: true
+        state: started
+        region: "{{ aws_region }}"
+        security_group: "{{ security_group_p.group_id }}"
+        iam_instance_profile: "{{ iam_role_name }}"
+        tags:
+          Name: prod-server
+          Environment: production
+        network:
+          assign_public_ip: true
+          delete_on_termination: true
+        volumes:
+          - device_name: /dev/xvda
+            ebs:
+              volume_size: 8  # Keep disk size minimal, within 30 GB across volumes
+              volume_type: gp3 # or gp2 (both included in free tier limit)
+              delete_on_termination: true
+        count: 1
+      register: ec2_prod
+    - name: Add new build instance to in-memory dynamic Ansible inventory
+      add_host:
+        name: "ec2-build"
+        ansible_host: "{{ item.public_dns_name }}"
+        ansible_user: ubuntu
+        ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
+        groups: build-server
+      loop: "{{ ec2_build.instances }}"
+    - name: Add new prod instance to in-memory dynamic Ansible inventory
+      add_host:
+        name: "ec2-prod"
+        ansible_host: "{{ item.public_dns_name }}"
+        ansible_user: ubuntu
+        ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
+        groups: prod-server
+      loop: "{{ ec2_prod.instances }}"
+    - name: Create local directory on Ansible-localhost
+      file:
+        path: /tmp/info_ec2/
+        state: directory
+        mode: "0755"
+    - name: Create a local txt file with instance details
+      copy:
+        content: |
+          Instance Details:
+          {% for instance in ec2_build.instances + ec2_prod.instances %}
+          Name: {{ instance.tags.Name }}
+          Public IP: {{ instance.public_ip }}
+          Private IP: {{ instance.private_ip }}
+          Instance ID: {{ instance.id }}
+          {% endfor %}
+        dest: /tmp/info_ec2/instance_details_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.txt
+#          mode: "0644"
+    - name: Upload instance details to S3
+      amazon.aws.s3_object:
+        bucket: "{{ s3_bucket }}"
+        object: "/info_ec2/instance_details_{{ ansible_date_time.date }}_{{ansible_date_time.time }}.txt"
+        src: /tmp/info_ec2/instance_details_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.txt
+        mode: put
+        region: "{{ aws_region }}"
