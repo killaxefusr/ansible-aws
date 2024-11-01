@@ -1,0 +1,23 @@
+---
+- name: Setup IAM Role and Policy for EC2 Access to S3
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "../host_vars/all.yml"
+  tasks:
+    - name: Create IAM Policy for S3 Access
+      amazon.aws.iam_managed_policy:
+        policy_name: "{{ iam_policy_name }}"
+        state: present
+        policy_description: S3 Access (GET/PUT/LIST)
+        policy: "{{ lookup('template','./files/IAM_policy.json.j2') }}"
+      register: s3_access_policy
+    - name: Create IAM Role for EC2 with S3 Access
+      amazon.aws.iam_role:
+        name: "{{ iam_role_name }}"
+        state: present
+        assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
+        description: Role for EC2 with S3 Access (GET/PUT/LIST)
+        managed_policies:
+          - "{{ s3_access_policy.policy.arn }}"
+      register: ec2_role
