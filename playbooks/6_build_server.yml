@@ -1,0 +1,8 @@
+- name: Configure Build Server
+  hosts: build-server
+  gather_facts: false
+  become: true
+  roles:
+    - build
+  vars_files:
+    - "../host_vars/all.yml"
