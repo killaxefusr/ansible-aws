@@ -2,6 +2,8 @@
 - name: Check AWS Free Tier usage for EC2, EBS, S3, Data Transfer, Elastic IP, and KMS
   hosts: localhost
   gather_facts: false
+  vars_files:
+    - "../host_vars/all.yml"
   tasks:
     - name: Get Free Tier usage details
       shell: |
