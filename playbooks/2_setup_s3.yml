@@ -6,7 +6,7 @@
     - "../host_vars/all.yml"
   tasks:
     - name: Create S3 Bucket
-      amazon.aws.aws_s3_bucket:
+      amazon.aws.s3_bucket:
         name: "{{ s3_bucket }}"
         region: "{{ aws_region }}"
         delete_public_access: true
