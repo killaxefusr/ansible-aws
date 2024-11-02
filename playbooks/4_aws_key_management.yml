@@ -24,7 +24,7 @@
         key_material: "{{ lookup('file', 'aws_ssh_private_key_file') }}"  # upload existing key in AWS
       register: keypair
       changed_when: true
-      tags::
+      tags:
         - never
         - upload_key
 
