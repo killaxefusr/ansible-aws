@@ -47,7 +47,7 @@
       loop: "{{ bucket_objects.objects }}"
       when: bucket_objects.objects is defined and bucket_objects.objects | length > 0
     - name: Delete S3 bucket
-      amazon.aws.aws_s3_bucket:
+      amazon.aws.s3_bucket:
         name: "{{ s3_bucket }}"
         state: absent
         region: "{{ aws_region }}"
