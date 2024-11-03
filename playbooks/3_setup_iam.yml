@@ -8,11 +8,13 @@
     - name: Check if IAM role exists
       amazon.aws.iam_role_info:
         name: "{{ iam_role_name }}"
+        region: "{{ aws_region }}"
       register: iam_role_info
       ignore_errors: true
     - name: Create IAM Policy for S3 Access
       amazon.aws.iam_managed_policy:
         policy_name: "{{ iam_policy_name }}"
+        region: "{{ aws_region }}"
         state: present
         policy_description: S3 Access (GET/PUT/LIST)
         policy: "{{ lookup('template','./files/IAM_policy.json.j2') }}"
@@ -21,6 +23,7 @@
     - name: Create IAM Role for EC2 with S3 Access
       amazon.aws.iam_role:
         name: "{{ iam_role_name }}"
+        region: "{{ aws_region }}"
         state: present
         assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
         description: Role for EC2 with S3 Access (GET/PUT/LIST)
