@@ -11,7 +11,8 @@
         region: "{{ aws_region }}"
       register: iam_role_info
       ignore_errors: true
-    - name: Create IAM Policy for S3 Access
+    
+    - name: Create or update IAM Policy for S3 Access
       amazon.aws.iam_managed_policy:
         policy_name: "{{ iam_policy_name }}"
         region: "{{ aws_region }}"
@@ -19,7 +20,17 @@
         policy_description: S3 Access (GET/PUT/LIST)
         policy: "{{ lookup('template','./files/IAM_policy.json.j2') }}"
       register: s3_access_policy
-      when: iam_role_info.roles is undefined
+
+    - name: Log if IAM Policy was created or updated
+      ansible.builtin.debug:
+        msg: "The IAM policy '{{ iam_policy_name }}' was created or updated."
+      when: s3_access_policy.changed
+
+    - name: Notify if IAM Policy already exists without changes
+      ansible.builtin.debug:
+        msg: "The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed."
+      when: not s3_access_policy.changed
+    
     - name: Create IAM Role for EC2 with S3 Access
       amazon.aws.iam_role:
         name: "{{ iam_role_name }}"
@@ -29,4 +40,4 @@
         description: Role for EC2 with S3 Access (GET/PUT/LIST)
         managed_policies:
           - "{{ s3_access_policy.policy.arn }}"
-      register: ec2_role
+      when: iam_role_info.roles is undefined
