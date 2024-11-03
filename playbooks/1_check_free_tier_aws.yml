@@ -7,7 +7,7 @@
   tasks:
     - name: Get Free Tier usage details
       shell: |
-        aws freetier get-free-tier-usage --query "freeTierUsages[].[service, usageType, actualUsageAmount, forecastedUsageAmount, limit]" --output json
+        aws freetier get-free-tier-usage --region "{{ aws_region }}" --query "freeTierUsages[].[service, usageType, actualUsageAmount, forecastedUsageAmount, limit]" --output json
       register: free_tier_usage
       changed_when: false
     - name: Parse and structure Free Tier usage data
