@@ -13,6 +13,10 @@
     - name: Parse and structure Free Tier usage data
       set_fact:
         free_tier_data: "{{ free_tier_usage.stdout | from_json }}"
+    - name: Check for empty Free Tier usage data
+      fail:
+        msg: "No Free Tier usage data available. Ensure your AWS Free Tier account is active and has usage data. (Also it can be in first days of month). Try start ansible-playbook without this tags"
+      when: free_tier_data.freeTierUsages | length == 0
     - name: Check each usageType for Free Tier limit exceedance
       vars:
         exceeded_usages: []
