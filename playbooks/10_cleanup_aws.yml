@@ -8,16 +8,19 @@
     - name: Keep the IAM role created above but remove all managed policies
       amazon.aws.iam_role:
         name: "{{ iam_role_name }}"
+        region: "{{ aws_region }}"
         assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
         purge_policies: true
         managed_policies: []
     - name: Remove an existing IAM Managed Policy
       amazon.aws.iam_managed_policy:
         policy_name: "{{ iam_policy_name }}"
+        region: "{{ aws_region }}"
         state: absent
     - name: Delete the IAM role
       amazon.aws.iam_role:
         name: "{{ iam_role_name }}"
+        region: "{{ aws_region }}"
         assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
         state: absent
 # Delete SSH key from localhost after AWS deletion
