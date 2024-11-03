@@ -5,12 +5,20 @@
   vars_files:
     - "../host_vars/all.yml"
   tasks:
+    - name: Check if S3 bucket exists
+      amazon.aws.s3_bucket_info:
+        name: "{{ s3_bucket }}"
+        region: "{{ aws_region }}"
+  register: s3_bucket_info
+  failed_when: s3_bucket_info.bucket is defined and not s3_bucket_info.bucket.empty
+  ignore_errors: true
     - name: Create S3 Bucket
       amazon.aws.s3_bucket:
         name: "{{ s3_bucket }}"
         region: "{{ aws_region }}"
         delete_public_access: true
         state: present
+        when: s3_bucket_info.bucket is undefined
     - name: Create S3 folders
       amazon.aws.s3_object:
         bucket: "{{ s3_bucket }}"
