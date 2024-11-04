@@ -41,3 +41,11 @@
         managed_policies:
           - "{{ s3_access_policy.policy.arn }}"
       when: iam_role_info.roles is undefined
+    - name: Notify IAM Role status
+      ansible.builtin.debug:
+        msg: >
+          {% if iam_role_info.roles is undefined %}
+            "IAM role '{{ iam_role_name }}' was created."
+          {% else %}
+            "IAM role '{{ iam_role_name }}' already exists."
+          {% endif %}
