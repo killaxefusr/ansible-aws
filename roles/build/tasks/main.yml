@@ -51,7 +51,7 @@
 - name: Build Docker image
   community.docker.docker_image:
     name: maven_build
-    tag: "1.0-{{ custom_date_time }}"
+    tag: "{{ custom_date_time }}"
     build:
       path: /tmp/
       dockerfile: Dockerfile
@@ -60,7 +60,7 @@
 - name: Run Maven build
   community.docker.docker_container:
     name: maven_build_container
-    image: maven_build:"1.0-{{ custom_date_time }}"
+    image: maven_build:"{{ custom_date_time }}"
     state: started
     recreate: true
     volumes:
