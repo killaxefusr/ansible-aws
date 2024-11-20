@@ -48,9 +48,6 @@
     src: files/Dockerfile
     dest: /tmp/Dockerfile
     force: yes
-- name: Set custom date and time fact
-  ansible.builtin.set_fact:
-    custom_date_time: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
 - name: Build Docker image
   community.docker.docker_image:
     name: maven_build
