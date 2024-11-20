@@ -11,6 +11,12 @@
       - awscli
     state: latest
     update_cache: true
+- name: Install boto3 and botocore
+  pip:
+    name: 
+      - boto3>=1.26.0
+      - botocore>=1.29.0
+    state: present
 - name: Add Docker GPG apt Key
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
@@ -35,8 +41,8 @@
 - name: Download WAR file from S3
   amazon.aws.s3_object:
     bucket: "{{ s3_bucket }}"
-    object: "/artifacts/hello-1.0_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.war"
-    dest: /tmp/hello-1.war
+    object: "/artifacts/hello-1.0_{{ custom_date_time }}.war"
+    dest: /tmp/hello-1.0.war
     mode: get
     region: "{{ aws_region }}"
 - name: Run Tomcat container with the built artifact
