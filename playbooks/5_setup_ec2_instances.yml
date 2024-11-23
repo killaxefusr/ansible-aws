@@ -135,4 +135,5 @@
         object: "/info_ec2/instance_details_{{ ansible_date_time.date }}_{{ansible_date_time.time }}.txt"
         src: /tmp/info_ec2/instance_details_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.txt
         mode: put
+        permission: []
         region: "{{ aws_region }}"
