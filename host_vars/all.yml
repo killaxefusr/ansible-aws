@@ -3,6 +3,7 @@ aws_key_name: "my-key-1"  # AWS key pair name (created or new)
 instance_type: "t3.micro"  # AWS EC2 instance type
 image_id: "ami-880553530880553530"  # actual AWS AMI ID (check region!)
 vpc_id: "vpc-880553530880553530"  # AWS VPC ID
+subnet_id: "subnet-880553530880553530" # AWS VPC Subnet ID
 s3_bucket: "mys3bucket"  # AWS S3 bucket address (uniq!)
 aws_ssh_private_key_file: "~/.ssh/{{ aws_key_name }}.pem"  # path to aws_key_name.pem on host (created or new)
 iam_policy_name: "S3AccessPolicy" # Name of AWS IAM policy  with access from EC2 to S3 (new)
