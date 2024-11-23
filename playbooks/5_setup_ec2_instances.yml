@@ -58,6 +58,7 @@
         region: "{{ aws_region }}"
         security_group: "{{ security_group_b.group_id }}"
         iam_instance_profile: "{{ iam_role_name }}"
+        subnet_id: "{{ subnet_id }}"
         tags:
           Name: build-server
           Environment: build
@@ -81,6 +82,7 @@
         state: started
         region: "{{ aws_region }}"
         security_group: "{{ security_group_p.group_id }}"
+        subnet_id: "{{ subnet_id }}"
         iam_instance_profile: "{{ iam_role_name }}"
         tags:
           Name: prod-server
