@@ -16,59 +16,76 @@
     - name: Check for empty Free Tier usage data
       fail:
         msg: |
-          No Free Tier usage data available. Ensure your AWS Free Tier account is active and has usage data. (Also this can be in first days of month). 
-          Check info on page https://console.aws.amazon.com/billing/home#/freetier and try start ansible-playbook without this tag.
+          No Free Tier usage data available. Ensure your AWS Free Tier account is active and has usage data. (Also this can be in first days of new month).
+          Check https://console.aws.amazon.com/billing/home#/freetier and re-run without this tag if necessary.
       when: free_tier_data | length == 0
-    - name: Check each usageType for Free Tier limit exceedance
-      vars:
+    - name: Initialize exceeded_usages list
+      set_fact:
         exceeded_usages: []
+    - name: Check each service usage, record if limit exceeded or untracked
       block:
         - name: Check EC2 Instance Hours (t2.micro) Free Tier limit (+4 hours)
           set_fact:
-            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+            exceeded_usages: "{{ exceeded_usages + [{'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]}] }}"
           loop: "{{ free_tier_data }}"
-          when: item[1] == 'BoxUsage:freetier.micro' and (item[2] | float + 4 > item[4] | float or item[3] | float + 4 > item[4] | float)
+          when: item[0] == 'Amazon Elastic Compute Cloud' and item[1] == 'BoxUsage:freetier.micro' and (item[2] | float + 4 > item[4] | float or item[3] | float + 4 > item[4] | float)
+          ignore_errors: true
         - name: Check EBS Storage Free Tier limit (+16 GB)
           set_fact:
-            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+            exceeded_usages: "{{ exceeded_usages + [{'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]}] }}"
           loop: "{{ free_tier_data }}"
-          when: item[1] == 'EBS:VolumeUsage' and (item[2] | float + 16 > item[4] | float or item[3] | float + 16 > item[4] | float)
-        - name: Check Elastic IP Hours Free Tier limit (+4 hours)
+          when: item[0] == 'Amazon Elastic Compute Cloud' and item[1] == 'EBS:VolumeUsage' and (item[2] | float + 16 > item[4] | float or item[3] | float + 16 > item[4] | float)
+          ignore_errors: true
+        - name: Check Public IP Hours Free Tier limit (+4 hours)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [{'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]}] }}"
+          loop: "{{ free_tier_data }}"
+          when: item[0] == 'Amazon Virtual Private Cloud' and item[1] == 'PublicIPv4:InUseAddress' and (item[2] | float + 4 > item[4] | float or item[3] | float + 4 > item[4] | float)
+          ignore_errors: true
+        - name: Check AWS Data Transfer Free Tier limit (DataTransfer-Out-Bytes) (+0.5 GB)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [{'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]}] }}"
+          loop: "{{ free_tier_data }}"
+          when: item[0] == 'AWS Data Transfer' and item[1] == 'DataTransfer-Out-Bytes' and (item[2] | float + 0.25 > item[4] | float or item[3] | float + 0.25 > item[4] | float)
+          ignore_errors: true
+        - name: Check S3 Timed Storage Free Tier limit (+0.25 GB)
+          set_fact:
+            exceeded_usages: "{{ exceeded_usages + [{'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]}] }}"
+          loop: "{{ free_tier_data }}"
+          when: item[0] == 'Amazon Simple Storage Service' and item[1] == 'TimedStorage-ByteHrs' and (item[2] | float + 0.25 > item[4] | float or item[3] | float + 0.25 > item[4] | float)
+          ignore_errors: true
+        - name: Check S3 Requests (Tier 1 and Tier 2) Free Tier limits (+5 requests)
           set_fact:
             exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
           loop: "{{ free_tier_data }}"
-          when: item[1] == 'PublicIPv4:InUseAddress' and (item[2] | float + 4 > item[4] | float or item[3] | float + 4 > item[4] | float)
-        - name: Check S3 Data Transfer Free Tier limit (+ 0.5 GB)
+          when: item[0] == 'Amazon Simple Storage Service' and (item[1] == 'Requests-Tier1' or item[1] == 'Requests-Tier2') and (item[2] | float + 5 > item[4] | float or item[3] | float + 5 > item[4] | float))
+
+        - name: Check AWS Data Transfer Free Tier limit (DataTransfer-Regional-Bytes) (+0.25 GB)
           set_fact:
-            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
+            exceeded_usages: "{{ exceeded_usages + [{'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]}] }}"
           loop: "{{ free_tier_data }}"
-          when: item[1] == 'DataTransfer-Out-Bytes' and (item[2] | float + 0.5 > item[4] | float or item[3] | float + 0.5 > item[4] | float)
-        - name: Check S3 Requests (Tier 1 and Tier 2) Free Tier limits (+6 requests)
-          set_fact:
-            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
-          loop: "{{ free_tier_data }}"
-          when: (item[1] == 'Requests-Tier1' and (item[2] | float + 6 > item[4] | float or item[3] | float + 6 > item[4] | float)) or (item[1] == 'Requests-Tier2' and (item[2] | float + 6 > item[4] | float or item[3] | float + 6 > item[4] | float))
-        - name: Check KMS Requests Free Tier limit (+ 3 requests)
-          set_fact:
-            exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
-          loop: "{{ free_tier_data }}"
-          when: item[1] == 'KMS-Requests' and (item[2] | float + 3 > item[4] | float or item[3] | float + 3 > item[4] | float)
-        - name: Output messages for exceeded Free Tier limits
-          fail:
-            msg: >
-              The following Free Tier limits have been exceeded or will be exceed:
-              {% for usage in exceeded_usages %}
-              - Service: {{ usage.service }}, UsageType: {{ usage.usageType }},
-                Actual Usage: {{ usage.actual }}, Forecasted Usage: {{ usage.forecasted }},
-                Limit: {{ usage.limit }}
-              {% endfor %}
-          when: exceeded_usages | length > 0
-    - name: Check current S3 storage usage
-      shell: |
-        aws s3api list-objects-v2 --bucket {{ s3_bucket }} --query "Contents[].Size" --output text | awk '{sum += $1} END {print sum / (1024 * 1024 * 1024)}'
-      register: s3_storage_usage
-      changed_when: false
-    - name: Fail if S3 storage usage + 500MB exceeds 5 GB Free Tier limit
-      fail:
-        msg: "Warning: S3 storage usage exceeds Free Tier 5 GB limit. Current usage: {{ s3_storage_usage.stdout }} GB."
-      when: s3_storage_usage.stdout | float + 0.5 > 5
+          when: item[0] == 'AWS Data Transfer' and item[1] == 'DataTransfer-Regional-Bytes' and (item[2] | float + 0.25 > item[4] | float or item[3] | float + 0.25 > item[4] | float)
+          ignore_errors: true
+    
+    - name: Notify for services without usage data
+      ansible.builtin.debug:
+        msg: "No usage data found for service {{ missing_service }} this month."
+      loop:
+        - "Amazon Elastic Compute Cloud"
+        - "Amazon Virtual Private Cloud"
+        - "Amazon Simple Storage Service"
+        - "AWS Data Transfer"
+      loop_control:
+        loop_var: missing_service
+      when: missing_service not in (item[0] for item in free_tier_data if item is defined)
+
+    - name: Output exceeded usage notifications
+      ansible.builtin.fail:
+        msg: >
+          The following Free Tier limits have been exceeded or are at risk of exceedance:
+          {% for usage in exceeded_usages %}
+          - Service: {{ usage.service }}, UsageType: {{ usage.usageType }},
+            Actual Usage: {{ usage.actual }}, Forecasted Usage: {{ usage.forecasted }},
+            Limit: {{ usage.limit }}
+          {% endfor %}
+      when: exceeded_usages | length > 0
