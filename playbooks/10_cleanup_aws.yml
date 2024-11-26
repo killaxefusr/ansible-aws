@@ -12,35 +12,57 @@
         assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
         purge_policies: true
         managed_policies: []
+      tags:
+        - never
+        - cleanup_aws
+        - del_iam
     - name: Remove an existing IAM Managed Policy
       amazon.aws.iam_managed_policy:
         policy_name: "{{ iam_policy_name }}"
         region: "{{ aws_region }}"
         state: absent
+      tags:
+        - never
+        - cleanup_aws
+        - del_iam
     - name: Delete the IAM role
       amazon.aws.iam_role:
         name: "{{ iam_role_name }}"
         region: "{{ aws_region }}"
         assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
         state: absent
+      tags:
+        - never
+        - cleanup_aws
+        - del_iam
 # Delete SSH key from localhost after AWS deletion
     - name: Delete AWS key pair
       amazon.aws.ec2_key:
         name: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
         state: absent
-      register: key_deleted
+      tags:
+        - never
+        - cleanup_aws
+        - del_aws_key
     - name: Remove SSH key file from localhost
       ansible.builtin.file:
         path: "{{ aws_ssh_private_key_file }}"
         state: absent
-      when: key_deleted.changed
+      tags:
+        - never
+        - cleanup_aws
+        - del_local_key
 # Delete S3 bucket and all objects inside
     - name: List all objects in S3 bucket for deleting
       amazon.aws.s3_bucket_info:
         name: "{{ s3_bucket }}"
         region: "{{ aws_region }}"
       register: bucket_objects
+      tags:
+        - never
+        - cleanup_aws
+        - del_s3
     - name: Delete all objects in S3 bucket
       amazon.aws.s3_object:
         bucket: "{{ s3_bucket }}"
@@ -49,9 +71,17 @@
         region: "{{ aws_region }}"
       loop: "{{ bucket_objects.objects }}"
       when: bucket_objects.objects is defined and bucket_objects.objects | length > 0
+      tags:
+        - never
+        - cleanup_aws
+        - del_s3
     - name: Delete S3 bucket
       amazon.aws.s3_bucket:
         name: "{{ s3_bucket }}"
         state: absent
         region: "{{ aws_region }}"
         force: true
+      tags:
+        - never
+        - cleanup_aws
+        - del_s3
