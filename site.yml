@@ -79,6 +79,9 @@
     - name: Display application URL
       debug:
         msg: "The application should be available at http://{{ec2_prod.instances[0].public_ip }}:80/hello-1.0/"
+  tags:
+    - production_server
+    - never
           
 # Optionally terminate Prod Server and Clean up its Resources in AWS (FREE!) in 60 minutes
 - import_playbook: playbooks/8_terminate_ec2.yml
