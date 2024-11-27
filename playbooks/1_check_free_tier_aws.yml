@@ -58,7 +58,7 @@
           set_fact:
             exceeded_usages: "{{ exceeded_usages + [ {'service': item[0], 'usageType': item[1], 'actual': item[2], 'forecasted': item[3], 'limit': item[4]} ] }}"
           loop: "{{ free_tier_data }}"
-          when: item[0] == 'Amazon Simple Storage Service' and (item[1] == 'Requests-Tier1' or item[1] == 'Requests-Tier2') and (item[2] | float + 5 > item[4] | float or item[3] | float + 5 > item[4] | float))
+          when: item[0] == 'Amazon Simple Storage Service' and (item[1] == 'Requests-Tier1' or item[1] == 'Requests-Tier2') and (item[2] | float + 5 > item[4] | float or item[3] | float + 5 > item[4] | float)
 
         - name: Check AWS Data Transfer Free Tier limit (DataTransfer-Regional-Bytes) (+0.25 GB)
           set_fact:
