@@ -77,7 +77,7 @@
         - "AWS Data Transfer"
       loop_control:
         loop_var: missing_service
-      when: missing_service not in (item[0] for item in free_tier_data if item is defined)
+      when: missing_service not in (free_tier_data | map(attribute=0) | list)
 
     - name: Output exceeded usage notifications
       ansible.builtin.fail:
