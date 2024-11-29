@@ -6,7 +6,16 @@
   tags:
     - free_tier_check
     - never
-    
+
+# Initialize custom date and time to use it in artifact name
+- name: Initialize custom date and time
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Set date and time fact
+      ansible.builtin.set_fact:
+        custom_date_time: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+        
 # 2 - Create S3 bucket "s3_bucket" and dirs "info_ec2" and "artifacts" inside 
 - import_playbook: playbooks/2_setup_s3.yml
   tags:
@@ -30,16 +39,7 @@
   tags:
     - ec2_instances
     - never
-
-# Initialize custom date and time to use it in artifact name
-- name: Initialize custom date and time
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: Set date and time fact
-      ansible.builtin.set_fact:
-        custom_date_time: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
-    
+ 
 # 6 - Configure Build Server by "build" Ansible role - install docker, build and run docker image to build maven artifact, upload WAR artifact to S3 "s3_bucket"
 - import_playbook: playbooks/6_build_server.yml
   tags:
