@@ -20,6 +20,7 @@
         path: "{{ log_file_path }}"
         line: "S3 bucket {{ s3_bucket }} already exists in {{ aws_region }}. Skipping creation."
       when: s3_bucket_info.buckets is defined and s3_bucket_info.buckets | length > 0
+      
     - name: Create S3 Bucket
       amazon.aws.s3_bucket:
         name: "{{ s3_bucket }}"
@@ -37,6 +38,7 @@
         path: "{{ log_file_path }}"
         line: "S3 bucket {{ s3_bucket }} in {{ aws_region }} created."
       when: bucket_creation.bucket is defined
+      
     - name: Create directories in the S3 bucket 
       amazon.aws.s3_object:
         bucket: "{{ s3_bucket }}"
