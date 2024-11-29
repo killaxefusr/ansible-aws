@@ -32,12 +32,12 @@
       debug:
         msg: "S3 bucket {{ s3_bucket }} in {{ aws_region }} created."
       when: bucket_creation.bucket is defined
-      - name: Log bucket creation in a file
+    - name: Log bucket creation in a file
       ansible.builtin.lineinfile:
         path: "{{ log_file_path }}"
         line: "S3 bucket {{ s3_bucket }} in {{ aws_region }} created."
       when: bucket_creation.bucket is defined
-        - name: Create directories in the S3 bucket 
+    - name: Create directories in the S3 bucket 
       amazon.aws.s3_object:
         bucket: "{{ s3_bucket }}"
         object: "{{ item }}/"
