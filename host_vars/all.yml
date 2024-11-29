@@ -1,3 +1,4 @@
+log_file_path: "/tmp/ansible_logs/log.txt"  # path for playbook's logfile
 aws_region: "eu-north-1"  # AWS region
 aws_key_name: "my-key-1"  # AWS key pair name (created or new)
 instance_type: "t3.micro"  # AWS EC2 instance type
