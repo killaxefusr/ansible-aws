@@ -18,7 +18,7 @@
 
 - name: Log start in a file
   ansible.builtin.lineinfile:
-    path: "/tmp/ansible_logs/log.txt"
+    path: "{{ log_file_path }}"
     line: "Starting playbook {{ custom_date_time }}."
     create: true
         
@@ -116,5 +116,5 @@
 
 - name: Log end in a file
   ansible.builtin.lineinfile:
-    path: "/tmp/ansible_logs/log.txt"
+    path: "{{ log_file_path }}"
     line: "End of playbook."
