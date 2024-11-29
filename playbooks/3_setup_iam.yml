@@ -17,29 +17,25 @@
         policy_name: "{{ iam_policy_name }}"
         region: "{{ aws_region }}"
         state: present
-        policy_description: S3 Access (GET/PUT/LIST)
+        policy_description: ansible-aws -- S3 Access (GET/PUT/LIST)
         policy: "{{ lookup('template','./files/IAM_policy.json.j2') }}"
       register: s3_access_policy
 
-    - name: Notify if IAM Policy was created or updated
+    - name: Notify IAM Policy status
       ansible.builtin.debug:
-        msg: "The IAM policy '{{ iam_policy_name }}' was created or updated."
-      when: s3_access_policy.changed
-    - name: Log if IAM Policy was created or updated
-      ansible.builtin.lineinfile:
+        msg: >
+          {% if s3_access_policy.changed %}
+            "The IAM policy '{{ iam_policy_name }}' was created or updated."
+          {% else %}
+            "The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed."
+          {% endif %}
+    - name: Log IAM Policy status to a block in a file
+      ansible.builtin.blockinfile:
         path: "{{ log_file_path }}"
-        line: "The IAM policy '{{ iam_policy_name }}' was created or updated."
-      when: s3_access_policy.changed
-      
-    - name: Notify if IAM Policy already exists without changes
-      ansible.builtin.debug:
-        msg: "The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed."
-      when: not s3_access_policy.changed
-    - name: Log if IAM Policy already exists without changes
-      ansible.builtin.lineinfile:
-        path: "{{ log_file_path }}"
-        line: "The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed."
-      when: not s3_access_policy.changed
+        block: |
+          {{ "The IAM policy '{{ iam_policy_name }}' was created or updated."
+          if s3_access_policy.changed
+          else "The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed." }}
       
     - name: Create IAM Role for EC2 with S3 Access
       amazon.aws.iam_role:
@@ -47,7 +43,7 @@
         region: "{{ aws_region }}"
         state: present
         assume_role_policy_document: "{{ lookup('file','./files/IAM_role.json') }}"
-        description: Role for EC2 with S3 Access (GET/PUT/LIST)
+        description: ansible-aws -- Role for EC2 with S3 Access (GET/PUT/LIST)
         managed_policies:
           - "{{ s3_access_policy.policy.arn }}"
       when: iam_role_info.roles is undefined
