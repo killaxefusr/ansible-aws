@@ -21,16 +21,26 @@
         policy: "{{ lookup('template','./files/IAM_policy.json.j2') }}"
       register: s3_access_policy
 
-    - name: Log if IAM Policy was created or updated
+    - name: Notify if IAM Policy was created or updated
       ansible.builtin.debug:
         msg: "The IAM policy '{{ iam_policy_name }}' was created or updated."
       when: s3_access_policy.changed
-
+    - name: Log if IAM Policy was created or updated
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "The IAM policy '{{ iam_policy_name }}' was created or updated."
+      when: s3_access_policy.changed
+      
     - name: Notify if IAM Policy already exists without changes
       ansible.builtin.debug:
         msg: "The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed."
       when: not s3_access_policy.changed
-    
+    - name: Log if IAM Policy already exists without changes
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed."
+      when: not s3_access_policy.changed
+      
     - name: Create IAM Role for EC2 with S3 Access
       amazon.aws.iam_role:
         name: "{{ iam_role_name }}"
@@ -41,6 +51,7 @@
         managed_policies:
           - "{{ s3_access_policy.policy.arn }}"
       when: iam_role_info.roles is undefined
+      
     - name: Notify IAM Role status
       ansible.builtin.debug:
         msg: >
@@ -49,3 +60,10 @@
           {% else %}
             "IAM role '{{ iam_role_name }}' already exists."
           {% endif %}
+    - name: Log IAM role status to a block in a file
+      ansible.builtin.blockinfile:
+        path: "{{ log_file_path }}"
+        block: |
+          {{ "IAM role '{{ iam_role_name }}' was created."
+          if iam_role_info.roles is undefined
+          else "IAM role '{{ iam_role_name }}' already exists." }}
