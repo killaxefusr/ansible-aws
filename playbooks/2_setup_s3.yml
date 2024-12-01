@@ -48,3 +48,11 @@
       loop:
         - info_ec2
         - artifacts
+        
+    - name: Log message for bucket creation
+      debug:
+        msg: "Directories 'info_ec2' and 'artifacts' ensured in bucket {{ s3_bucket }}."
+    - name: Log directory creation
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Directories 'info_ec2' and 'artifacts' ensured in bucket {{ s3_bucket }}."
