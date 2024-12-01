@@ -14,8 +14,9 @@
   tasks:
     - name: Set date and time fact
       ansible.builtin.set_fact:
-        custom_date_time: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
-
+#        custom_date_time: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+        custom_date_time: "{{ lookup('pipe', 'date -Is') }}"
+        
 - name: Log start in a file
   hosts: localhost
   gather_facts: false
