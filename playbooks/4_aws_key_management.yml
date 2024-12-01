@@ -5,17 +5,36 @@
   vars_files:
     - "../host_vars/all.yml"
   tasks:
-    - name: Create and save new AWS key pair locally
+
+    - name: Gather information about a specific keypair
+      amazon.aws.ec2_key_info:
+        names:
+          - "{{ aws_key_name }}"
+        region: "{{ aws_region }}"
+      register: aws_keypair_existence
+
+    - name: Log message if keypair already exists in AWS
+      debug:
+        msg: "KeyPair {{ aws_key_name }} already exists in {{ aws_region }}."
+      when: aws_keypair_existence.keypairs is defined and aws_keypair_existence.keypairs | length > 0
+    - name: Log bucket existence in a file
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        msg: "KeyPair {{ aws_key_name }} already exists in {{ aws_region }}."
+      when: aws_keypair_existence.keypairs is defined and aws_keypair_existence.keypairs | length > 0
+  
+    - name: Create new AWS key pair and save it locally
       amazon.aws.ec2_key:
         name: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
         state: present
         file_name: "{{ aws_ssh_private_key_file }}"  # create and saves private key from AWS locally
-      register: keypair
-      changed_when: true
+      notify: 
+        - Set permissions for SSH key
       tags:
         - never
         - create_key
+
       
     - name: Upload existing local key to AWS
       amazon.aws.ec2_key:
@@ -23,14 +42,14 @@
         region: "{{ aws_region }}"
         state: present
         key_material: "{{ lookup('file', 'aws_ssh_private_key_file') }}"  # upload existing key in AWS
-      register: keypair
-      changed_when: true
+      notify: 
+        - Set permissions for SSH key
       tags:
         - never
         - upload_key
-
-    - name: Set appropriate permissions for the SSH key
+  
+  handlers:
+    - name: Set permissions for SSH key
       ansible.builtin.file:
         path: "{{ aws_ssh_private_key_file }}"
         mode: "0400"  # Set permission to read-only for the owner
-        when: keypair.changed
