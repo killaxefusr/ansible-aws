@@ -15,12 +15,18 @@
       debug:
         msg: "S3 bucket {{ s3_bucket }} already exists in {{ aws_region }}. Skipping creation."
       when: s3_bucket_info.buckets is defined and s3_bucket_info.buckets | length > 0
+      tags:
+        - msg
+        - never
     - name: Log bucket existence in a file
       ansible.builtin.lineinfile:
         path: "{{ log_file_path }}"
         line: "S3 bucket {{ s3_bucket }} already exists in {{ aws_region }}. Skipping creation."
       when: s3_bucket_info.buckets is defined and s3_bucket_info.buckets | length > 0
-      
+      tags:
+        - log
+        - never
+        
     - name: Create S3 Bucket
       amazon.aws.s3_bucket:
         name: "{{ s3_bucket }}"
@@ -33,12 +39,18 @@
       debug:
         msg: "S3 bucket {{ s3_bucket }} in {{ aws_region }} created."
       when: bucket_creation.bucket is defined
+      tags:
+        - msg
+        - never
     - name: Log bucket creation in a file
       ansible.builtin.lineinfile:
         path: "{{ log_file_path }}"
         line: "S3 bucket {{ s3_bucket }} in {{ aws_region }} created."
       when: bucket_creation.bucket is defined
-      
+      tags:
+        - log
+        - never
+        
     - name: Create directories in the S3 bucket 
       amazon.aws.s3_object:
         bucket: "{{ s3_bucket }}"
@@ -52,7 +64,13 @@
     - name: Log message for bucket creation
       debug:
         msg: "Directories 'info_ec2' and 'artifacts' ensured in bucket {{ s3_bucket }}."
+      tags:
+        - msg
+        - never
     - name: Log directory creation
       ansible.builtin.lineinfile:
         path: "{{ log_file_path }}"
         line: "Directories 'info_aws' and 'artifacts' ensured in bucket {{ s3_bucket }}."
+      tags:
+        - log
+        - never
