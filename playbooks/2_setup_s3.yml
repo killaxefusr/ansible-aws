@@ -46,7 +46,7 @@
         region: "{{ aws_region }}"
         mode: create
       loop:
-        - info_ec2
+        - info_aws
         - artifacts
         
     - name: Log message for bucket creation
@@ -55,4 +55,4 @@
     - name: Log directory creation
       ansible.builtin.lineinfile:
         path: "{{ log_file_path }}"
-        line: "Directories 'info_ec2' and 'artifacts' ensured in bucket {{ s3_bucket }}."
+        line: "Directories 'info_aws' and 'artifacts' ensured in bucket {{ s3_bucket }}."
