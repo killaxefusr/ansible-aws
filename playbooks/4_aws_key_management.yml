@@ -5,51 +5,99 @@
   vars_files:
     - "../host_vars/all.yml"
   tasks:
-
-    - name: Gather information about a specific keypair
+    # Pre-checks for file and AWS key existence
+    - name: Check if AWS key pair exists
       amazon.aws.ec2_key_info:
-        names:
-          - "{{ aws_key_name }}"
+        name: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
-      register: aws_keypair_existence
-
-    - name: Log message if keypair already exists in AWS
-      debug:
-        msg: "KeyPair {{ aws_key_name }} already exists in {{ aws_region }}."
-      when: aws_keypair_existence.keypairs is defined and aws_keypair_existence.keypairs | length > 0
-    - name: Log bucket existence in a file
-      ansible.builtin.lineinfile:
+      register: aws_key_info
+      tags:
+        - create_key
+        - upload_key
+    - name: Check if local key file exists
+      stat:
+        path: "{{ aws_ssh_private_key_file }}"
+      register: local_key_file
+      tags:
+        - create_key
+        - upload_key
+    - name: Log message for key pair and file status
+      ansible.builtin.debug:
+        msg: |
+          AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
+          Local key file exists: {{ local_key_file.stat.exists }}.
+      tags:
+        - create_key
+        - upload_key
+    - name: Log in file for key pair and file status
+      ansible.builtin.blockinfile:
         path: "{{ log_file_path }}"
-        msg: "KeyPair {{ aws_key_name }} already exists in {{ aws_region }}."
-      when: aws_keypair_existence.keypairs is defined and aws_keypair_existence.keypairs | length > 0
-  
-    - name: Create new AWS key pair and save it locally
+        block: |
+          AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
+          Local key file exists: {{ local_key_file.stat.exists }}.
+      tags:
+        - create_key
+        - upload_key
+
+    # Create new key if AWS key is missing and local file doesn't exist + tag create_key
+    - name: Create new AWS key pair and save locally
       amazon.aws.ec2_key:
         name: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
         state: present
-        file_name: "{{ aws_ssh_private_key_file }}"  # create and saves private key from AWS locally
-      notify: 
-        - Set permissions for SSH key
+        file_name: "{{ aws_ssh_private_key_file }}"
+      when: aws_key_info.keypairs is not defined and not local_key_file.stat.exists
       tags:
-        - never
+        - create_key
+      register: created_key
+      notify:
+        - Set permissions for SSH key
+    - name: Log message for key creation
+      debug:
+        msg: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
+      when: created_key.changed
+      tags:
+        - create_key
+    - name: Log in file for key creation
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
+      when: created_key.changed
+      tags:
         - create_key
 
-      
+    # Upload existing key if local file exists + tag upload_key
     - name: Upload existing local key to AWS
       amazon.aws.ec2_key:
         name: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
         state: present
-        key_material: "{{ lookup('file', 'aws_ssh_private_key_file') }}"  # upload existing key in AWS
-      notify: 
-        - Set permissions for SSH key
+        key_material: "{{ lookup('file', aws_ssh_private_key_file) }}"
+      when: local_key_file.stat.exists and aws_key_info.keypairs is not defined
+#this when state will not go above error when "key already in aws and != aws_ssh_private_key_file" but you can add this (if you dont worry about security problem):
+#when: local_key_file.stat.exists and (aws_key_info.keypairs is defined and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
       tags:
-        - never
         - upload_key
-  
+      no_log: true
+      notify:
+        - Set permissions for SSH key
+      register: uploaded_key
+    - name: Log message for key creation
+      debug:
+        msg: "Existing key '{{ aws_key_name }}' uploaded to AWS."
+      when: uploaded_key.changed
+      tags:
+        - upload_key
+    - name: Log in file for key upload
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Existing key '{{ aws_key_name }}' uploaded to AWS."
+      when: uploaded_key.changed
+      tags:
+        - upload_key
+
   handlers:
     - name: Set permissions for SSH key
       ansible.builtin.file:
         path: "{{ aws_ssh_private_key_file }}"
-        mode: "0400"  # Set permission to read-only for the owner
+        mode: "0400" # Set permission to read-only for the owner
