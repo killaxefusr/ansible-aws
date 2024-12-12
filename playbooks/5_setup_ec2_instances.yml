@@ -12,9 +12,110 @@
       register: external_ip
       retries: 3
       delay: 10
+    - name: Log message for Ansible IP
+      debug:
+        msg: "Ansible IP: {{ external_ip.content | trim }}"
+      tags:
+        - msg
+        - never
+    - name: Log in file for Ansible IP
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Ansible IP: {{ external_ip.content | trim }}"
+      tags:
+        - log
+        - never
+        
+    - name: Check if the security group for build server exists
+      amazon.aws.ec2_security_group_info:
+        filters:
+          group-name: "{{ ec2_security_group_build }}"
+          vpc-id: "{{ vpc_id }}"
+        region: "{{ aws_region }}"
+      register: security_group_b_info
+    - name: Log message for existence of build sec group
+      debug:
+        msg: "Security group {{ ec2_security_group_build }} for build instance already exists in {{ aws_region }}"
+      when: security_group_b_info.security_groups | length > 0
+      tags:
+        - msg
+        - never
+    - name: Log in file for existence of build sec group
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Security group {{ ec2_security_group_build }} for build instance already exists in {{ aws_region }}"
+      when: security_group_b_info.security_groups | length > 0
+      tags:
+        - log
+        - never
+        
     - name: Create security group with dynamic CIDR for build server
       amazon.aws.ec2_security_group:
-        name: build-sg-01
+        name: "{{ ec2_security_group_build }}"
+        description: Allow SSH and HTTP from dynamic IP for build
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc_id }}"  #make sure your VPC assign public ip automatically, like default VPC
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip:
+              - "{{ external_ip.content | trim }}/32"
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+        state: present
+      register: security_group_b
+      when: security_group_b_info.security_groups | length == 0
+    - name: Log message for creation of build sec group
+      debug:
+        msg: "Security group with dynamic CIDR for build instance {{ ec2_security_group_build }} created in {{ aws_region }}"
+      when: security_group_b.changed
+      tags:
+        - msg
+        - never
+    - name: Log in file for creation of build sec group
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Security group with dynamic CIDR for build instance {{ ec2_security_group_build }} created in {{ aws_region }}"
+      when: security_group_b.changed
+      tags:
+        - log
+        - never
+
+    - name: Set the security group ID for build server
+      set_fact:
+        security_group_b_id: >-
+          {{ (security_group_b_info.security_groups[0].id 
+              if security_group_b_info.security_groups | length > 0 
+              else security_group_b.group_id) }}
+
+    - name: Check if the security group for prod server exists
+      amazon.aws.ec2_security_group_info:
+        filters:
+          group-name: "{{ ec2_security_group_prod }}"
+          vpc-id: "{{ vpc_id }}"
+        region: "{{ aws_region }}"
+      register: security_group_p_info
+    - name: Log message for existence of prod sec group
+      debug:
+        msg: "Security group {{ ec2_security_group_prod }} for prod instance already exists in {{ aws_region }}"
+      when: security_group_p_info.security_groups | length > 0
+      tags:
+        - msg
+        - never
+    - name: Log in file for existence of prod sec group
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Security group {{ ec2_security_group_prod }} for prod instance {{ ec2_security_group_prod }} already exists in {{ aws_region }}"
+      when: security_group_p_info.security_groups | length > 0
+      tags:
+        - log
+        - never
+
+    - name: Create security group with dynamic CIDR for prod server
+      amazon.aws.ec2_security_group:
+        name: "{{ ec2_security_group_prod }}"
         description: Allow SSH and HTTP from dynamic IP
         region: "{{ aws_region }}"
         vpc_id: "{{ vpc_id }}"  #make sure your VPC assign public ip automatically, like default VPC
@@ -22,33 +123,69 @@
           - proto: tcp
             from_port: 22
             to_port: 22
-            cidr_ip: "{{ external_ip.content | trim }}/32"
-        rules_egress:
-          - proto: all
-            cidr_ip: 0.0.0.0/0
-        state: present
-      register: security_group_b
-    - name: Create security group with dynamic CIDR for prod server
-      amazon.aws.ec2_security_group:
-        name: prod-sg-01
-        description: Allow SSH and HTTP from dynamic IP
-        region: "{{ aws_region }}"
-        vpc_id: "{{ vpc_id }}"
-        rules:
-          - proto: tcp
-            from_port: 22
-            to_port: 22
-            cidr_ip: "{{ external_ip.content | trim }}/32"
+            cidr_ip: 
+              - "{{ external_ip.content | trim }}/32"
           - proto: tcp
             from_port: 80
             to_port: 80
-            cidr_ip: "{{ external_ip.content | trim }}/32"
+            cidr_ip:
+              - "{{ external_ip.content | trim }}/32"
+#            -      
+# add another ip if your ip != ansible ip
         rules_egress:
           - proto: all
             cidr_ip: 0.0.0.0/0
         state: present
       register: security_group_p
-    - name: Launch EC2 instance 1 (build)
+      when: security_group_p_info.security_groups | length == 0
+    - name: Log message for creation of prod sec group
+      debug:
+        msg: "Security group with dynamic CIDR for prod instance {{ ec2_security_group_prod }} created in {{ aws_region }}"
+      when: security_group_p.changed
+      tags:
+        - msg
+        - never
+    - name: Log in file for creation of prod sec group
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Security group with dynamic CIDR for prod instance {{ ec2_security_group_prod }} created in {{ aws_region }}"
+      when: security_group_p.changed
+      tags:
+        - log
+        - never
+
+    - name: Set the security group ID for prod server
+      set_fact:
+        security_group_p_id: >-
+          {{ (security_group_p_info.security_groups[0].id 
+              if security_group_p_info.security_groups | length > 0 
+              else security_group_p.group_id) }}
+
+    - name: Check if build EC2 instance exists
+      amazon.aws.ec2_instance_info:
+        filters:
+          "tag:Environment": "{{ ec2_instance_env_build }}"
+          "tag:Name": "{{ ec2_instance_name_build }}"
+          instance-state-name: ["running"]
+        region: "{{ aws_region }}"
+      register: existing_build_instance
+    - name: Log message for build EC2 instance existence
+      debug:
+        msg: "Build EC2 instance '{{ ec2_instance_name_build }}' already exists with ID: {{ existing_build_instance.instances[0].id }} and IP: {{ existing_build_instance.instances[0].public_ip_address }}"
+      when: existing_build_instance.instances | length > 0
+      tags:
+        - msg
+        - never
+    - name: Log in file for build EC2 instance existence
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Build EC2 instance '{{ ec2_instance_name_build }}' already exists with ID: {{ existing_build_instance.instances[0].id }} and IP: {{ existing_build_instance.instances[0].public_ip_address }}"
+      when: existing_build_instance.instances | length > 0
+      tags:
+        - log
+        - never
+
+    - name: Launch EC2 instance 1 (build) only if not exists
       amazon.aws.ec2_instance:
         key_name: "{{ aws_key_name }}"
         instance_type: "{{ instance_type }}"
@@ -56,12 +193,12 @@
         wait: true
         state: started
         region: "{{ aws_region }}"
-        security_group: "{{ security_group_b.group_id }}"
+        security_group: "{{ security_group_b_id }}"
         iam_instance_profile: "{{ iam_role_name }}"
         subnet_id: "{{ subnet_id }}"
         tags:
-          Name: build-server
-          Environment: build
+          Environment: "{{ ec2_instance_env_build }}"
+          Name: "{{ ec2_instance_name_build }}"
         network:
           assign_public_ip: true
           delete_on_termination: true
@@ -72,21 +209,72 @@
               volume_type: gp3  # or gp2 (both included in free tier limit)
               delete_on_termination: true
         count: 1
-      register: ec2_build
-    - name: Launch EC2 instance 2 (production)
+      when: existing_build_instance.instances | length == 0
+      register: new_ec2_build
+    - name: Log message for details of created build instance
+      debug:
+        msg: >
+          {% if new_ec2_build.instances is defined and new_ec2_build.instances | length > 0 %}
+            Build EC2 instance {{ new_ec2_build.instances[0].instance_id }} created with public IP {{ new_ec2_build.instances[0].public_ip_address }}.
+          {% else %}
+            No new EC2 instance was created or an unexpected issue occurred.
+          {% endif %}
+      when: new_ec2_build.changed
+      tags:
+        - msg
+        - never
+    - name: Log in file for details of created build instance
+      lineinfile:
+        path: "{{ log_file_path }}"
+        line: >
+          {% if new_ec2_build.instances is defined and new_ec2_build.instances | length > 0 %}
+            Build EC2 instance {{ new_ec2_build.instances[0].instance_id }} created with public IP {{ new_ec2_build.instances[0].public_ip_address }}.
+          {% else %}
+            No new EC2 instance was created or an unexpected issue occurred.
+          {% endif %}
+      when: new_ec2_build.changed
+      tags:
+        - log
+        - never
+
+    - name: Check if prod EC2 instance exists
+      amazon.aws.ec2_instance_info:
+        filters:
+          "tag:Environment": "{{ ec2_instance_env_prod }}"
+          "tag:Name": "{{ ec2_instance_name_prod }}"
+          instance-state-name: ["running"]
+        region: "{{ aws_region }}"
+      register: existing_prod_instance
+    - name: Log message for prod EC2 instance existence
+      debug:
+        msg: "Prod EC2 instance '{{ ec2_instance_name_prod }}' already exists with ID: {{ existing_prod_instance.instances[0].instance_id }} and IP: {{ existing_prod_instance.instances[0].public_ip_address }}"
+      when: existing_prod_instance.instances | length > 0
+      tags:
+        - msg
+        - never
+    - name: Log in file for prod EC2 instance existence
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Prod EC2 instance '{{ ec2_instance_name_prod }}' already exists with ID: {{ existing_prod_instance.instances[0].instance_id }} and IP: {{ existing_prod_instance.instances[0].public_ip_address }}"
+      when: existing_prod_instance.instances | length > 0
+      tags:
+        - log
+        - never
+
+    - name: Launch EC2 instance 2 (production) only if not exists
       amazon.aws.ec2_instance:
+        name: "{{ ec2_instance_name_prod }}"
         key_name: "{{ aws_key_name }}"
         instance_type: "{{ instance_type }}"
         image: "{{ image_id }}"
         wait: true
         state: started
         region: "{{ aws_region }}"
-        security_group: "{{ security_group_p.group_id }}"
+        security_group: "{{ security_group_p_id }}"
         subnet_id: "{{ subnet_id }}"
         iam_instance_profile: "{{ iam_role_name }}"
         tags:
-          Name: prod-server
-          Environment: production
+          Environment: "{{ ec2_instance_env_prod }}"
         network:
           assign_public_ip: true
           delete_on_termination: true
@@ -94,48 +282,97 @@
           - device_name: /dev/xvda
             ebs:
               volume_size: 8  # Keep disk size minimal, within 30 GB across volumes
-              volume_type: gp3 # or gp2 (both included in free tier limit)
+              volume_type: gp3  # or gp2 (both included in free tier limit)
               delete_on_termination: true
         count: 1
-      register: ec2_prod
-    - name: Add new build instance to in-memory dynamic Ansible inventory
+      when: existing_prod_instance.instances | length == 0
+      register: new_ec2_prod
+    - name: Log message for details of created prod instance
+      debug:
+        msg: >
+          {% if new_ec2_prod.instances is defined and new_ec2_prod.instances | length > 0 %}
+            Prod EC2 instance {{ new_ec2_prod.instances[0].instance_id }} created with public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
+          {% else %}
+            No new EC2 instance was created or an unexpected issue occurred.
+          {% endif %}
+      when: new_ec2_prod.changed
+      tags:
+        - msg
+        - never
+    - name: Log in file for details of created prod instance
+      lineinfile:
+        path: "{{ log_file_path }}"
+        line: >
+          {% if new_ec2_prod.instances is defined and new_ec2_prod.instances | length > 0 %}
+            Prod EC2 instance {{ new_ec2_prod.instances[0].instance_id }} created with public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
+          {% else %}
+            No new EC2 instance was created or an unexpected issue occurred.
+          {% endif %}
+      when: new_ec2_prod.changed
+      tags:
+        - log
+        - never
+
+    - name: Add EC2 instance to dynamic inventory
       add_host:
-        name: "ec2-build"
-        ansible_host: "{{ item.public_dns_name }}"
+        name: "{{ ec2_instance_name_build }}"
+        ansible_host: >-
+          {{ existing_build_instance.instances[0].public_ip_address
+             if existing_build_instance.instances | length > 0
+             else new_ec2_build.instances[0].public_ip_address }}
         ansible_user: ubuntu
         ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
-        groups: build-server
-      loop: "{{ ec2_build.instances }}"
-    - name: Add new prod instance to in-memory dynamic Ansible inventory
+        groups: "{{ ec2_instance_env_build }}"
+    - name: Log message for dynamic inventory addition (build)
+      debug:
+        msg: >-
+          "Added build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{
+            existing_build_instance.instances[0].public_ip_address
+             if existing_build_instance.instances | length > 0
+             else new_ec2_build.instances[0].public_ip_address }} to dynamic inventory."
+      tags:
+        - msg
+        - never
+    - name: Log in file for dynamic inventory addition (build)
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: >-
+          "Added build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{
+            existing_build_instance.instances[0].public_ip_address
+             if existing_build_instance.instances | length > 0
+             else new_ec2_build.instances[0].public_ip_address }} to dynamic inventory."
+      tags:
+        - log
+        - never
+
+    - name: Add EC2 instance to dynamic inventory
       add_host:
-        name: "ec2-prod"
-        ansible_host: "{{ item.public_dns_name }}"
+        name: "{{ ec2_instance_name_prod }}"
+        ansible_host: >-
+          {{ existing_prod_instance.instances[0].public_ip_address
+             if existing_prod_instance.instances | length > 0
+             else new_ec2_prod.instances[0].public_ip_address }}
         ansible_user: ubuntu
         ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
-        groups: prod-server
-      loop: "{{ ec2_prod.instances }}"
-    - name: Create local directory on Ansible-localhost
-      file:
-        path: /tmp/info_ec2/
-        state: directory
-        mode: "0755"
-    - name: Create a local txt file with instance details
-      copy:
-        content: |
-          Instance Details:
-          {% for instance in ec2_build.instances + ec2_prod.instances %}
-          Name: {{ instance.tags.Name }}
-          Public IP: {{ instance.public_ip }}
-          Private IP: {{ instance.private_ip }}
-          Instance ID: {{ instance.id }}
-          {% endfor %}
-        dest: /tmp/info_ec2/instance_details_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.txt
-#          mode: "0644"
-    - name: Upload instance details to S3
-      amazon.aws.s3_object:
-        bucket: "{{ s3_bucket }}"
-        object: "/info_ec2/instance_details_{{ ansible_date_time.date }}_{{ansible_date_time.time }}.txt"
-        src: /tmp/info_ec2/instance_details_{{ ansible_date_time.date }}_{{ ansible_date_time.time }}.txt
-        mode: put
-        permission: []
-        region: "{{ aws_region }}"
+        groups: "{{ ec2_instance_env_prod }}"
+    - name: Log message for dynamic inventory addition (build)
+      debug:
+        msg: >-
+          "Added prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{
+            existing_prod_instance.instances[0].public_ip_address
+             if existing_prod_instance.instances | length > 0
+             else new_ec2_prod.instances[0].public_ip_address }} to inventory."
+      tags:
+        - msg
+        - never
+    - name: Log in file for dynamic inventory addition (build)
+      ansible.builtin.lineinfile:
+        path: "{{ log_file_path }}"
+        line: >-
+          "Added prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{
+            existing_prod_instance.instances[0].public_ip_address
+             if existing_prod_instance.instances | length > 0
+             else new_ec2_prod.instances[0].public_ip_address }} to inventory."
+      tags:
+        - log
+        - never
