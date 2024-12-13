@@ -313,23 +313,23 @@
         - log
         - never
 
-    - name: Add EC2 instance to dynamic inventory
-      add_host:
-        name: "{{ ec2_instance_name_build }}"
-        ansible_host: >-
-          {{ existing_build_instance.instances[0].public_ip_address
+    - name: Determine the public IP for build
+      set_fact:
+        public_ip_build: >
+           {{ existing_build_instance.instances[0].public_ip_address
              if existing_build_instance.instances | length > 0
              else new_ec2_build.instances[0].public_ip_address }}
+    - name: Add EC2 build instance to dynamic inventory
+      add_host:
+        name: "{{ ec2_instance_name_build }}"
+        ansible_host: "{{ public_ip_build }}"
         ansible_user: ubuntu
         ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
         groups: "{{ ec2_instance_env_build }}"
     - name: Log message for dynamic inventory addition (build)
       debug:
         msg: >-
-          "Added build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{
-            existing_build_instance.instances[0].public_ip_address
-             if existing_build_instance.instances | length > 0
-             else new_ec2_build.instances[0].public_ip_address }} to dynamic inventory."
+          "Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
       tags:
         - msg
         - never
@@ -337,31 +337,28 @@
       ansible.builtin.lineinfile:
         path: "{{ log_file_path }}"
         line: >-
-          "Added build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{
-            existing_build_instance.instances[0].public_ip_address
-             if existing_build_instance.instances | length > 0
-             else new_ec2_build.instances[0].public_ip_address }} to dynamic inventory."
+          "Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
       tags:
         - log
         - never
 
-    - name: Add EC2 instance to dynamic inventory
-      add_host:
-        name: "{{ ec2_instance_name_prod }}"
-        ansible_host: >-
-          {{ existing_prod_instance.instances[0].public_ip_address
+    - name: Determine the public IP for prod
+      set_fact:
+        public_ip_prod: >
+           {{ existing_prod_instance.instances[0].public_ip_address
              if existing_prod_instance.instances | length > 0
              else new_ec2_prod.instances[0].public_ip_address }}
+    - name: Add EC2 prod instance to dynamic inventory
+      add_host:
+        name: "{{ ec2_instance_name_prod }}"
+        ansible_host: "{{ public_ip_prod }}"
         ansible_user: ubuntu
         ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
         groups: "{{ ec2_instance_env_prod }}"
     - name: Log message for dynamic inventory addition (build)
       debug:
         msg: >-
-          "Added prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{
-            existing_prod_instance.instances[0].public_ip_address
-             if existing_prod_instance.instances | length > 0
-             else new_ec2_prod.instances[0].public_ip_address }} to inventory."
+          "Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
       tags:
         - msg
         - never
@@ -369,10 +366,7 @@
       ansible.builtin.lineinfile:
         path: "{{ log_file_path }}"
         line: >-
-          "Added prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{
-            existing_prod_instance.instances[0].public_ip_address
-             if existing_prod_instance.instances | length > 0
-             else new_ec2_prod.instances[0].public_ip_address }} to inventory."
+          "Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
       tags:
         - log
         - never
