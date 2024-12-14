@@ -169,21 +169,6 @@
           instance-state-name: ["running"]
         region: "{{ aws_region }}"
       register: existing_build_instance
-    - name: Log message for build EC2 instance existence
-      debug:
-        msg: "Build EC2 instance '{{ ec2_instance_name_build }}' already exists with ID: {{ existing_build_instance.instances[0].id }} and IP: {{ existing_build_instance.instances[0].public_ip_address }}"
-      when: existing_build_instance.instances | length > 0
-      tags:
-        - msg
-        - never
-    - name: Log in file for build EC2 instance existence
-      ansible.builtin.lineinfile:
-        path: "{{ log_file_path }}"
-        line: "Build EC2 instance '{{ ec2_instance_name_build }}' already exists with ID: {{ existing_build_instance.instances[0].id }} and IP: {{ existing_build_instance.instances[0].public_ip_address }}"
-      when: existing_build_instance.instances | length > 0
-      tags:
-        - log
-        - never
 
     - name: Launch EC2 instance 1 (build) only if not exists
       amazon.aws.ec2_instance:
@@ -211,31 +196,37 @@
         count: 1
       when: existing_build_instance.instances | length == 0
       register: new_ec2_build
-    - name: Log message for details of created build instance
+    - name: Log message for details of build instance
       debug:
         msg: >
           {% if new_ec2_build.instances is defined and new_ec2_build.instances | length > 0 %}
-            Build EC2 instance {{ new_ec2_build.instances[0].instance_id }} created with public IP {{ new_ec2_build.instances[0].public_ip_address }}.
+            Build EC2 instance {{ ec2_instance_name_build }} created with with ID: {{ new_ec2_build.instances[0].instance_id }} and public IP {{ new_ec2_build.instances[0].public_ip_address }}.
+          {% elif existing_build_instance.instances is defined and existing_build_instance.instances | length > 0 %}
+            Existing Build EC2 instance {{ ec2_instance_name_build }} with ID: {{ existing_build_instance.instances[0].instance_id }} is being used with public IP: {{ existing_build_instance.instances[0].public_ip_address }}.
           {% else %}
-            No new EC2 instance was created or an unexpected issue occurred.
+            ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
-      when: new_ec2_build.changed
       tags:
         - msg
         - never
-    - name: Log in file for details of created build instance
+    - name: Log in file for details of build instance
       lineinfile:
         path: "{{ log_file_path }}"
         line: >
           {% if new_ec2_build.instances is defined and new_ec2_build.instances | length > 0 %}
-            Build EC2 instance {{ new_ec2_build.instances[0].instance_id }} created with public IP {{ new_ec2_build.instances[0].public_ip_address }}.
+            Build EC2 instance {{ ec2_instance_name_build }} created with with ID: {{ new_ec2_build.instances[0].instance_id }} and public IP {{ new_ec2_build.instances[0].public_ip_address }}.
+          {% elif existing_build_instance.instances is defined and existing_build_instance.instances | length > 0 %}
+            Existing Build EC2 instance {{ ec2_instance_name_build }} with ID: {{ existing_build_instance.instances[0].instance_id }} is being used with public IP: {{ existing_build_instance.instances[0].public_ip_address }}.
           {% else %}
-            No new EC2 instance was created or an unexpected issue occurred.
+            ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
-      when: new_ec2_build.changed
       tags:
         - log
         - never
+    - name: Fail if no build instance exists or is created
+      fail:
+        msg: "No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook."
+      when: (new_ec2_build.instances is not defined and new_ec2_build.instances | length == 0) and (existing_build_instance.instances is not defined or existing_build_instance.instances | length == 0)
 
     - name: Check if prod EC2 instance exists
       amazon.aws.ec2_instance_info:
@@ -245,21 +236,6 @@
           instance-state-name: ["running"]
         region: "{{ aws_region }}"
       register: existing_prod_instance
-    - name: Log message for prod EC2 instance existence
-      debug:
-        msg: "Prod EC2 instance '{{ ec2_instance_name_prod }}' already exists with ID: {{ existing_prod_instance.instances[0].instance_id }} and IP: {{ existing_prod_instance.instances[0].public_ip_address }}"
-      when: existing_prod_instance.instances | length > 0
-      tags:
-        - msg
-        - never
-    - name: Log in file for prod EC2 instance existence
-      ansible.builtin.lineinfile:
-        path: "{{ log_file_path }}"
-        line: "Prod EC2 instance '{{ ec2_instance_name_prod }}' already exists with ID: {{ existing_prod_instance.instances[0].instance_id }} and IP: {{ existing_prod_instance.instances[0].public_ip_address }}"
-      when: existing_prod_instance.instances | length > 0
-      tags:
-        - log
-        - never
 
     - name: Launch EC2 instance 2 (production) only if not exists
       amazon.aws.ec2_instance:
@@ -291,11 +267,12 @@
       debug:
         msg: >
           {% if new_ec2_prod.instances is defined and new_ec2_prod.instances | length > 0 %}
-            Prod EC2 instance {{ new_ec2_prod.instances[0].instance_id }} created with public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
+            Prod EC2 instance {{ ec2_instance_name_prod }} created with with ID: {{ new_ec2_prod.instances[0].instance_id }} and public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
+          {% elif existing_prod_instance.instances is defined and existing_prod_instance.instances | length > 0 %}
+            Existing prod EC2 instance {{ ec2_instance_name_prod }} with ID: {{ existing_prod_instance.instances[0].instance_id }} is being used with public IP {{ existing_prod_instance.instances[0].public_ip_address }}.
           {% else %}
-            No new EC2 instance was created or an unexpected issue occurred.
+            ERROR: No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
-      when: new_ec2_prod.changed
       tags:
         - msg
         - never
@@ -304,14 +281,20 @@
         path: "{{ log_file_path }}"
         line: >
           {% if new_ec2_prod.instances is defined and new_ec2_prod.instances | length > 0 %}
-            Prod EC2 instance {{ new_ec2_prod.instances[0].instance_id }} created with public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
+            Prod EC2 instance {{ ec2_instance_name_prod }} created with with ID: {{ new_ec2_prod.instances[0].instance_id }} and public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
+          {% elif existing_prod_instance.instances is defined and existing_prod_instance.instances | length > 0 %}
+            Existing prod EC2 instance {{ ec2_instance_name_prod }} with ID: {{ existing_prod_instance.instances[0].instance_id }} is being used with public IP {{ existing_prod_instance.instances[0].public_ip_address }}.
           {% else %}
-            No new EC2 instance was created or an unexpected issue occurred.
+            ERROR: No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
-      when: new_ec2_prod.changed
       tags:
         - log
         - never
+
+    - name: Fail if no prod instance exists or is created
+      fail:
+        msg: "No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook."
+      when: (new_ec2_prod.instances is not defined and  new_ec2_prod.instances | length == 0) and (existing_prod_instance.instances is not defined or existing_prod_instance.instances | length == 0)
 
     - name: Determine the public IP for build
       set_fact:
