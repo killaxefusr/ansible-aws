@@ -14,6 +14,8 @@
       copy:
         content: "{{ custom_date_time }}"
         dest: "./host_vars/custom_date_time.yml"
+      tags:
+        - always
         
 # 0 - Start log in file
 - name: Log start in a file
