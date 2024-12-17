@@ -78,6 +78,21 @@
       loop_control:
         loop_var: missing_service
       when: missing_service not in (free_tier_data | map(attribute=0) | list)
+    - name: Log exceeded Free Tier limits to a logfile
+      lineinfile:
+        path: "{{ log_file_path }}"
+        line: "No usage data found for service {{ missing_service }} this month."
+      loop:
+        - "Amazon Elastic Compute Cloud"
+        - "Amazon Virtual Private Cloud"
+        - "Amazon Simple Storage Service"
+        - "AWS Data Transfer"
+      loop_control:
+        loop_var: missing_service
+      when: missing_service not in (free_tier_data | map(attribute=0) | list)
+      tags:
+        - log
+        - never
 
     - name: Log exceeded Free Tier limits to a logfile
       blockinfile:
@@ -92,8 +107,7 @@
       when: exceeded_usages | length > 0
       tags:
         - log
-        - never 
-
+        - never
     - name: Output exceeded usage notifications
       fail:
         msg: >
@@ -104,6 +118,3 @@
             Limit: {{ usage.limit }}
           {% endfor %}
       when: exceeded_usages | length > 0
-      tags:
-        - msg
-        - never
