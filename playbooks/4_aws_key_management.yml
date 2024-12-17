@@ -22,7 +22,7 @@
         - create_key
         - upload_key
     - name: Log message for key pair and file status
-      ansible.builtin.debug:
+      debug:
         msg: |
           AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
           Local key file exists: {{ local_key_file.stat.exists }}.
@@ -32,7 +32,7 @@
         - msg
         - never
     - name: Log in file for key pair and file status
-      ansible.builtin.blockinfile:
+      blockinfile:
         path: "{{ log_file_path }}"
         block: |
           AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
@@ -65,7 +65,7 @@
         - msg
         - never
     - name: Log in file for key creation
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
       when: created_key.changed
@@ -99,7 +99,7 @@
         - msg
         - never
     - name: Log in file for key upload
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "Existing key '{{ aws_key_name }}' uploaded to AWS."
       when: uploaded_key.changed
@@ -110,6 +110,6 @@
 
   handlers:
     - name: Set permissions for SSH key
-      ansible.builtin.file:
+      file:
         path: "{{ aws_ssh_private_key_file }}"
         mode: "0400" # Set permission to read-only for the owner
