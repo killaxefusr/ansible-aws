@@ -19,7 +19,7 @@
         - msg
         - never
     - name: Log bucket existence in a file
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "S3 bucket {{ s3_bucket }} already exists in {{ aws_region }}. Skipping creation."
       when: s3_bucket_info.buckets is defined and s3_bucket_info.buckets | length > 0
@@ -43,7 +43,7 @@
         - msg
         - never
     - name: Log bucket creation in a file
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "S3 bucket {{ s3_bucket }} in {{ aws_region }} created."
       when: bucket_creation.bucket is defined
@@ -68,7 +68,7 @@
         - msg
         - never
     - name: Log directory creation
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "Directories 'info_aws' and 'artifacts' ensured in bucket {{ s3_bucket }}."
       tags:
