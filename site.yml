@@ -21,6 +21,9 @@
         path: "{{ log_file_path }}"
         line: "Starting playbook {{ custom_date_time }}."
         create: true
+      tags:
+        - log
+        - never
 
 # 1 - Check AWS Free Tier usage for EC2, EBS, S3, Data Transfer, Elastic IP, and KMS
 - import_playbook: playbooks/1_check_free_tier_aws.yml
@@ -129,3 +132,6 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "End of playbook {{ custom_date_time }}."
+      tags:
+        - log
+        - never
