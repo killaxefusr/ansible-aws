@@ -10,6 +10,8 @@
       set_fact:
 #        custom_date_time: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
         custom_date_time: "{{ lookup('pipe', 'date -Is') }}"
+      tags:
+        - always
     - name: Save custom date and time to file
       copy:
         content: "{{ custom_date_time }}"
