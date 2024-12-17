@@ -14,7 +14,7 @@
         - always
     - name: Save custom date and time to file
       copy:
-        content: "{{ custom_date_time }}"
+        content: "custom_date_time: {{ custom_date_time }}"
         dest: "./host_vars/custom_date_time.yml"
       tags:
         - always
