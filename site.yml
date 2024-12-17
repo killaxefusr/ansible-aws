@@ -1,7 +1,7 @@
 ---
 # Master playbook to manage workflow by importing modular playbooks
 
-# - Initialize custom date and time to use it in log and artifact name
+# 0 - Initialize custom date and time to use it in log and artifact name
 - name: Initialize custom date and time
   hosts: localhost
   gather_facts: false
@@ -15,10 +15,12 @@
 - name: Log start in a file
   hosts: localhost
   gather_facts: false
-  lineinfile:
-    path: "{{ log_file_path }}"
-    line: "Starting playbook {{ custom_date_time }}."
-    create: true
+  tasks:
+    - name: Log start in a file
+      lineinfile:
+        path: "{{ log_file_path }}"
+        line: "Starting playbook {{ custom_date_time }}."
+        create: true
 
 # 1 - Check AWS Free Tier usage for EC2, EBS, S3, Data Transfer, Elastic IP, and KMS
 - import_playbook: playbooks/1_check_free_tier_aws.yml
@@ -122,6 +124,8 @@
 - name: Log end in a file
   hosts: localhost
   gather_facts: false
-  lineinfile:
-    path: "{{ log_file_path }}"
-    line: "End of playbook {{ custom_date_time }}."
+  tasks:
+    - name: Log end in a file
+      lineinfile:
+        path: "{{ log_file_path }}"
+        line: "End of playbook {{ custom_date_time }}."
