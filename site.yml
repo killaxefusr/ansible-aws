@@ -10,13 +10,18 @@
       set_fact:
 #        custom_date_time: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
         custom_date_time: "{{ lookup('pipe', 'date -Is') }}"
-
+    - name: Save custom date and time to file
+      copy:
+        content: "{{ custom_date_time }}"
+        dest: "./host_vars/custom_date_time.yml"
+        
 # 0 - Start log in file
 - name: Log start in a file
   hosts: localhost
   gather_facts: false
   vars_files:
     - "./host_vars/all.yml"
+    - "./host_vars/custom_date_time.yml"
   tasks:
     - name: Log start in a file
       lineinfile:
