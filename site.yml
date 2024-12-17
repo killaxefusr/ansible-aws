@@ -136,6 +136,7 @@
   gather_facts: false
   vars_files:
     - "./host_vars/all.yml"
+    - "./host_vars/custom_date_time.yml"
   tasks:
     - name: Log end in a file
       lineinfile:
