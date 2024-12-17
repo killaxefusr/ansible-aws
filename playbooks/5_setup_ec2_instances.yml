@@ -19,7 +19,7 @@
         - msg
         - never
     - name: Log in file for Ansible IP
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "Ansible IP: {{ external_ip.content | trim }}"
       tags:
@@ -41,7 +41,7 @@
         - msg
         - never
     - name: Log in file for existence of build sec group
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group {{ ec2_security_group_build }} for build instance already exists in {{ aws_region }}"
       when: security_group_b_info.security_groups | length > 0
@@ -75,7 +75,7 @@
         - msg
         - never
     - name: Log in file for creation of build sec group
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group with dynamic CIDR for build instance {{ ec2_security_group_build }} created in {{ aws_region }}"
       when: security_group_b.changed
@@ -105,7 +105,7 @@
         - msg
         - never
     - name: Log in file for existence of prod sec group
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group {{ ec2_security_group_prod }} for prod instance {{ ec2_security_group_prod }} already exists in {{ aws_region }}"
       when: security_group_p_info.security_groups | length > 0
@@ -146,7 +146,7 @@
         - msg
         - never
     - name: Log in file for creation of prod sec group
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group with dynamic CIDR for prod instance {{ ec2_security_group_prod }} created in {{ aws_region }}"
       when: security_group_p.changed
@@ -317,7 +317,7 @@
         - msg
         - never
     - name: Log in file for dynamic inventory addition (build)
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: >-
           "Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
@@ -346,7 +346,7 @@
         - msg
         - never
     - name: Log in file for dynamic inventory addition (build)
-      ansible.builtin.lineinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
         line: >-
           "Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
