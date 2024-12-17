@@ -1,13 +1,7 @@
 ---
 # Master playbook to manage workflow by importing modular playbooks
 
-# 1 - Check AWS Free Tier usage for EC2, EBS, S3, Data Transfer, Elastic IP, and KMS
-- import_playbook: playbooks/1_check_free_tier_aws.yml
-  tags:
-    - free_tier_check
-    - never
-
-# Initialize custom date and time to use it in artifact name
+# - Initialize custom date and time to use it in log and artifact name
 - name: Initialize custom date and time
   hosts: localhost
   gather_facts: false
@@ -16,7 +10,8 @@
       ansible.builtin.set_fact:
 #        custom_date_time: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
         custom_date_time: "{{ lookup('pipe', 'date -Is') }}"
-        
+
+# 0 - Start log in file
 - name: Log start in a file
   hosts: localhost
   gather_facts: false
@@ -24,7 +19,13 @@
     path: "{{ log_file_path }}"
     line: "Starting playbook {{ custom_date_time }}."
     create: true
-        
+
+# 1 - Check AWS Free Tier usage for EC2, EBS, S3, Data Transfer, Elastic IP, and KMS
+- import_playbook: playbooks/1_check_free_tier_aws.yml
+  tags:
+    - free_tier_check
+    - never
+
 # 2 - Create S3 bucket "s3_bucket" and dirs "info_ec2" and "artifacts" inside 
 - import_playbook: playbooks/2_setup_s3.yml
   tags:
@@ -111,12 +112,13 @@
     - never
     - stop_prod
     
-#Optionally terminate AWS IAM policy and role/ssh-key/S3 bucket
+# Optionally terminate AWS IAM policy and role/ssh-key/S3 bucket
 - import_playbook: playbooks/10_cleanup_aws.yml
   tags:
     - never
     - cleanup_aws
 
+# End log in file
 - name: Log end in a file
   hosts: localhost
   gather_facts: false
