@@ -44,7 +44,7 @@
     state: directory
     mode: "0755"
 - name: Copy Dockerfile and context to build server
-  ansible.builtin.copy:
+  copy:
     src: files/Dockerfile
     dest: /tmp/Dockerfile
     force: yes
