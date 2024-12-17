@@ -68,7 +68,7 @@
           ignore_errors: true
     
     - name: Notify for services without usage data
-      ansible.builtin.debug:
+      debug:
         msg: "No usage data found for service {{ missing_service }} this month."
       loop:
         - "Amazon Elastic Compute Cloud"
@@ -80,7 +80,7 @@
       when: missing_service not in (free_tier_data | map(attribute=0) | list)
 
     - name: Log exceeded Free Tier limits to a logfile
-      ansible.builtin.blockinfile:
+      blockinfile:
         path: "{{ log_file_path }}"
         block: |
           The following Free Tier limits have been exceeded or are at risk of exceedance:
@@ -95,7 +95,7 @@
         - never 
 
     - name: Output exceeded usage notifications
-      ansible.builtin.fail:
+      fail:
         msg: >
           The following Free Tier limits have been exceeded or are at risk of exceedance:
           {% for usage in exceeded_usages %}
