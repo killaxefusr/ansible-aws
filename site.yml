@@ -145,7 +145,7 @@
     - name: Log end in a file
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "End of playbook {{ custom_date_time }}."
+        line: "Ending of playbook {{ custom_date_time }}."
       tags:
         - log
         - never
