@@ -239,7 +239,6 @@
 
     - name: Launch EC2 instance 2 (production) only if not exists
       amazon.aws.ec2_instance:
-        name: "{{ ec2_instance_name_prod }}"
         key_name: "{{ aws_key_name }}"
         instance_type: "{{ instance_type }}"
         image: "{{ image_id }}"
@@ -251,6 +250,7 @@
         iam_instance_profile: "{{ iam_role_name }}"
         tags:
           Environment: "{{ ec2_instance_env_prod }}"
+          Name: "{{ ec2_instance_name_prod }}"
         network:
           assign_public_ip: true
           delete_on_termination: true
