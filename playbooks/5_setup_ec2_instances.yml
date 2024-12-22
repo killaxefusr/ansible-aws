@@ -15,6 +15,7 @@
     - name: Log message for Ansible IP
       debug:
         msg: "Ansible IP: {{ external_ip.content | trim }}"
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - msg
         - never
@@ -22,6 +23,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Ansible IP: {{ external_ip.content | trim }}"
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
         - never
@@ -36,7 +38,7 @@
     - name: Log message for existence of build sec group
       debug:
         msg: "Security group {{ ec2_security_group_build }} for build instance already exists in {{ aws_region }}"
-      when: security_group_b_info.security_groups | length > 0
+      when: "'ec2_instances' in ansible_run_tags and security_group_b_info.security_groups | length > 0"
       tags:
         - msg
         - never
@@ -44,7 +46,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group {{ ec2_security_group_build }} for build instance already exists in {{ aws_region }}"
-      when: security_group_b_info.security_groups | length > 0
+      when: "'ec2_instances' in ansible_run_tags and security_group_b_info.security_groups | length > 0"
       tags:
         - log
         - never
@@ -70,7 +72,7 @@
     - name: Log message for creation of build sec group
       debug:
         msg: "Security group with dynamic CIDR for build instance {{ ec2_security_group_build }} created in {{ aws_region }}"
-      when: security_group_b.changed
+      when: "'ec2_instances' in ansible_run_tags and security_group_b.changed"
       tags:
         - msg
         - never
@@ -78,7 +80,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group with dynamic CIDR for build instance {{ ec2_security_group_build }} created in {{ aws_region }}"
-      when: security_group_b.changed
+      when: "'ec2_instances' in ansible_run_tags and security_group_b.changed"
       tags:
         - log
         - never
@@ -100,7 +102,7 @@
     - name: Log message for existence of prod sec group
       debug:
         msg: "Security group {{ ec2_security_group_prod }} for prod instance already exists in {{ aws_region }}"
-      when: security_group_p_info.security_groups | length > 0
+      when: "'ec2_instances' in ansible_run_tags and security_group_p_info.security_groups | length > 0"
       tags:
         - msg
         - never
@@ -108,7 +110,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group {{ ec2_security_group_prod }} for prod instance {{ ec2_security_group_prod }} already exists in {{ aws_region }}"
-      when: security_group_p_info.security_groups | length > 0
+      when: "'ec2_instances' in ansible_run_tags and security_group_p_info.security_groups | length > 0"
       tags:
         - log
         - never
@@ -137,11 +139,11 @@
             cidr_ip: 0.0.0.0/0
         state: present
       register: security_group_p
-      when: security_group_p_info.security_groups | length == 0
+      when: "'ec2_instances' in ansible_run_tags and security_group_p_info.security_groups | length == 0"
     - name: Log message for creation of prod sec group
       debug:
         msg: "Security group with dynamic CIDR for prod instance {{ ec2_security_group_prod }} created in {{ aws_region }}"
-      when: security_group_p.changed
+      when: "'ec2_instances' in ansible_run_tags and security_group_p.changed"
       tags:
         - msg
         - never
@@ -149,7 +151,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group with dynamic CIDR for prod instance {{ ec2_security_group_prod }} created in {{ aws_region }}"
-      when: security_group_p.changed
+      when: "'ec2_instances' in ansible_run_tags and security_group_p.changed"
       tags:
         - log
         - never
@@ -206,6 +208,7 @@
           {% else %}
             ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - msg
         - never
@@ -220,6 +223,7 @@
           {% else %}
             ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
         - never
@@ -273,6 +277,7 @@
           {% else %}
             ERROR: No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - msg
         - never
@@ -287,6 +292,7 @@
           {% else %}
             ERROR: No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
         - never
@@ -313,6 +319,7 @@
       debug:
         msg: >-
           "Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - msg
         - never
@@ -321,6 +328,7 @@
         path: "{{ log_file_path }}"
         line: >-
           "Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
         - never
@@ -342,6 +350,7 @@
       debug:
         msg: >-
           "Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - msg
         - never
@@ -350,6 +359,7 @@
         path: "{{ log_file_path }}"
         line: >-
           "Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
+      when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
         - never
