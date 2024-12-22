@@ -75,8 +75,8 @@
 # Optionally terminate Build Server and Clean up its Resources in AWS (FREE!) in 5 minutes
 - import_playbook: playbooks/8_terminate_ec2.yml
   vars:
-    tag_name: "build-server"
-    security_group_name: "build-sg-01"
+    tag_name: "{{ ec2_instance_name_build }}"
+    security_group_name: "{{ ec2_security_group_build }}"
     time: 5
   tags:
     - never
@@ -85,7 +85,7 @@
 # Optionally stop Build Server (PAID!) 
 - import_playbook: playbooks/9_stop_ec2.yml
   vars:
-    ec2_instance_name: "build-server"
+    ec2_instance_name: "{{ ec2_instance_name_build }}"
     time: 5
   tags:
     - never
@@ -112,8 +112,8 @@
 # Optionally terminate Prod Server and Clean up its Resources in AWS (FREE!) in 60 minutes
 - import_playbook: playbooks/8_terminate_ec2.yml
   vars:
-    tag_name: "prod-server"
-    security_group_name: "prod-sg-01"
+    tag_name: "{{ ec2_instance_name_prod }}"
+    security_group_name: "{{ ec2_security_group_prod }}"
     time: 60
   tags:
     - never
@@ -122,7 +122,7 @@
 # Optionally stop Prod Server (PAID!) 
 - import_playbook: playbooks/9_stop_ec2.yml
   vars:
-    ec2_instance_name: "prod-server"
+    ec2_instance_name: "{{ ec2_instance_name_prod }}"
     time: 5
   tags:
     - never
