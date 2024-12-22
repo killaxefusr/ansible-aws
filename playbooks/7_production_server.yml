@@ -1,5 +1,5 @@
 - name: Configure Production Server
-  hosts: prod-server
+  hosts: "{{ ec2_instance_name_prod }}"
   gather_facts: false
   become: true
   roles:
