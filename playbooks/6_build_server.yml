@@ -1,5 +1,5 @@
 - name: Configure Build Server
-  hosts: build-server
+  hosts: "{{ ec2_instance_name_build }}"
   gather_facts: false
   become: true
   roles:
