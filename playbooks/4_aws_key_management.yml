@@ -11,6 +11,7 @@
         name: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
       register: aws_key_info
+      when: "'key_management' in ansible_run_tags"
       tags:
         - create_key
         - upload_key
@@ -18,6 +19,7 @@
       stat:
         path: "{{ aws_ssh_private_key_file }}"
       register: local_key_file
+      when: "'key_management' in ansible_run_tags"
       tags:
         - create_key
         - upload_key
@@ -26,9 +28,11 @@
         msg: |
           AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
           Local key file exists: {{ local_key_file.stat.exists }}.
+      when: >
+        ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
+        and "msg" in ansible_run_tags
+        and "key_management" in ansible_run_tags
       tags:
-        - create_key
-        - upload_key
         - msg
         - never
     - name: Log in file for key pair and file status
@@ -37,9 +41,11 @@
         block: |
           AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
           Local key file exists: {{ local_key_file.stat.exists }}.
+      when: >
+        ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
+        and "log" in ansible_run_tags
+        and "key_management" in ansible_run_tags
       tags:
-        - create_key
-        - upload_key
         - log
         - never
 
@@ -50,7 +56,9 @@
         region: "{{ aws_region }}"
         state: present
         file_name: "{{ aws_ssh_private_key_file }}"
-      when: aws_key_info.keypairs is not defined and not local_key_file.stat.exists
+      when: >
+        "key_management" in ansible_run_tags
+        and (aws_key_info.keypairs is not defined and not local_key_file.stat.exists)
       tags:
         - create_key
       register: created_key
@@ -59,18 +67,22 @@
     - name: Log message for key creation
       debug:
         msg: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
-      when: created_key.changed
+      when: >
+        "key_management" in ansible_run_tags
+        and "create_key" in ansible_run_tags
+        and created_key.changed"
       tags:
-        - create_key
         - msg
         - never
     - name: Log in file for key creation
       lineinfile:
         path: "{{ log_file_path }}"
         line: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
-      when: created_key.changed
+      when: >
+        "key_management" in ansible_run_tags
+        and "create_key" in ansible_run_tags
+        and created_key.changed
       tags:
-        - create_key
         - log
         - never
         
@@ -81,9 +93,11 @@
         region: "{{ aws_region }}"
         state: present
         key_material: "{{ lookup('file', aws_ssh_private_key_file) }}"
-      when: local_key_file.stat.exists and aws_key_info.keypairs is not defined
+      when: >
+        "key_management" in ansible_run_tags
+        and (local_key_file.stat.exists and aws_key_info.keypairs is not defined)
 #this when state will not go above error when "key already in aws and != aws_ssh_private_key_file" but you can add this (if you dont worry about security problem):
-#when: local_key_file.stat.exists and (aws_key_info.keypairs is defined and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
+#when: "key_management" in ansible_run_tags and local_key_file.stat.exists and (aws_key_info.keypairs is defined and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
       tags:
         - upload_key
       no_log: true
@@ -93,18 +107,22 @@
     - name: Log message for key creation
       debug:
         msg: "Existing key '{{ aws_key_name }}' uploaded to AWS."
-      when: uploaded_key.changed
+      when: >
+        "key_management" in ansible_run_tags
+        and "upload_key" in ansible_run_tags
+        and uploaded_key.changed
       tags:
-        - upload_key
         - msg
         - never
     - name: Log in file for key upload
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Existing key '{{ aws_key_name }}' uploaded to AWS."
-      when: uploaded_key.changed
+      when: >
+        "key_management" in ansible_run_tags
+        and "upload_key" in ansible_run_tags
+        and uploaded_key.changed
       tags:
-        - upload_key
         - log
         - never
 
