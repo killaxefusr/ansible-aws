@@ -73,23 +73,23 @@
     - never
     
 # Optionally terminate Build Server and Clean up its Resources in AWS (FREE!) in 5 minutes
-- import_playbook: playbooks/8_terminate_ec2.yml
-  vars:
-    tag_name: "{{ ec2_instance_name_build }}"
-    security_group_name: "{{ ec2_security_group_build }}"
-    time: 5
-  tags:
-    - never
-    - terminate_build
+#- import_playbook: playbooks/8_terminate_ec2.yml
+#  vars:
+#    tag_name: "{{ ec2_instance_name_build }}"
+#    security_group_name: "{{ ec2_security_group_build }}"
+#    time: 5
+#  tags:
+#    - never
+#    - terminate_build
     
 # Optionally stop Build Server (PAID!) 
-- import_playbook: playbooks/9_stop_ec2.yml
-  vars:
-    ec2_instance_name: "{{ ec2_instance_name_build }}"
-    time: 5
-  tags:
-    - never
-    - stop_build
+#- import_playbook: playbooks/9_stop_ec2.yml
+#  vars:
+#    ec2_instance_name: "{{ ec2_instance_name_build }}"
+#    time: 5
+#  tags:
+#    - never
+#    - stop_build
     
 # 7 - Configure Prod Server by "deploy" Ansible role -- install docker, download WAR artifact from S3 "s3_bucket", build and run docker image with the built artifact from S3
 - import_playbook: playbooks/7_production_server.yml
@@ -110,29 +110,29 @@
     - never
           
 # Optionally terminate Prod Server and Clean up its Resources in AWS (FREE!) in 60 minutes
-- import_playbook: playbooks/8_terminate_ec2.yml
-  vars:
-    tag_name: "{{ ec2_instance_name_prod }}"
-    security_group_name: "{{ ec2_security_group_prod }}"
-    time: 60
-  tags:
-    - never
-    - terminate_prod
+#- import_playbook: playbooks/8_terminate_ec2.yml
+#  vars:
+#    tag_name: "{{ ec2_instance_name_prod }}"
+#    security_group_name: "{{ ec2_security_group_prod }}"
+#    time: 60
+#  tags:
+#    - never
+#    - terminate_prod
     
 # Optionally stop Prod Server (PAID!) 
-- import_playbook: playbooks/9_stop_ec2.yml
-  vars:
-    ec2_instance_name: "{{ ec2_instance_name_prod }}"
-    time: 5
-  tags:
-    - never
-    - stop_prod
+#- import_playbook: playbooks/9_stop_ec2.yml
+#  vars:
+#    ec2_instance_name: "{{ ec2_instance_name_prod }}"
+#    time: 5
+#  tags:
+#    - never
+#    - stop_prod
     
 # Optionally terminate AWS IAM policy and role/ssh-key/S3 bucket
-- import_playbook: playbooks/10_cleanup_aws.yml
-  tags:
-    - never
-    - cleanup_aws
+#- import_playbook: playbooks/10_cleanup_aws.yml
+#  tags:
+#    - never
+#    - cleanup_aws
 
 # End log in file
 - name: Log end in a file
