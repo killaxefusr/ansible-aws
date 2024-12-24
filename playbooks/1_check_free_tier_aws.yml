@@ -81,7 +81,7 @@
     - name: Log exceeded Free Tier limits to a logfile
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ 'No usage data found for service ' + missing_service + ' this month.' | strip }}"
+        line: "{{ ('No usage data found for service ' ~ missing_service ~ ' this month.') | trim }}"
       loop:
         - "Amazon Elastic Compute Cloud"
         - "Amazon Virtual Private Cloud"
