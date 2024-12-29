@@ -42,6 +42,7 @@
         block: |
           {{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
           {{ custom_date_time }}:Local key file exists: {{ local_key_file.stat.exists }}.
+        insertafter: "EOF"
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
         and "log" in ansible_run_tags
@@ -78,6 +79,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "{{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
+        insertafter: "EOF"
       when: >
         ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags)
         and created_key.changed
@@ -116,6 +118,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "{{ custom_date_time }}:Existing key '{{ aws_key_name }}' uploaded to AWS."
+        insertafter: "EOF"
       when: >
         ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
         and uploaded_key.changed
