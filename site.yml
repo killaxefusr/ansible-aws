@@ -146,6 +146,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Ending of playbook {{ custom_date_time }}."
+        insertafter: "EOF"
       tags:
         - log
         - never
