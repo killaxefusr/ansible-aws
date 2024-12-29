@@ -95,6 +95,16 @@
         - log
         - never
 
+    - name: Output exceeded usage notifications
+      fail:
+        msg: >
+          The following Free Tier limits have been exceeded or are at risk of exceedance:
+          {% for usage in exceeded_usages %}
+          - Service: {{ usage.service }}, UsageType: {{ usage.usageType }},
+            Actual Usage: {{ usage.actual }}, Forecasted Usage: {{ usage.forecasted }},
+            Limit: {{ usage.limit }}
+          {% endfor %}
+      when: exceeded_usages | length > 0
     - name: Log exceeded Free Tier limits to a logfile
       blockinfile:
         path: "{{ log_file_path }}"
@@ -109,13 +119,23 @@
       tags:
         - log
         - never
-    - name: Output exceeded usage notifications
-      fail:
-        msg: >
-          The following Free Tier limits have been exceeded or are at risk of exceedance:
-          {% for usage in exceeded_usages %}
-          - Service: {{ usage.service }}, UsageType: {{ usage.usageType }},
-            Actual Usage: {{ usage.actual }}, Forecasted Usage: {{ usage.forecasted }},
-            Limit: {{ usage.limit }}
-          {% endfor %}
-      when: exceeded_usages | length > 0
+
+    - name: Msg successful checks for services without exceeding limits
+      debug:
+        msg: "All checks passed for {{ service }}. No Free Tier limit exceeded."
+      loop: "{{ free_tier_data | map(attribute=0) | list | unique }}"
+      loop_control:
+        loop_var: service
+      when: "('free_tier_check' in ansible_run_tags) and (service not in (exceeded_usages | map(attribute='service') | list))"
+    - name: Log successful checks to logfile
+      lineinfile:
+        path: "{{ log_file_path }}"
+        line: "All checks passed for {{ service }}. No Free Tier limit exceeded."
+        insertafter: "EOF"
+      loop: "{{ free_tier_data | map(attribute=0) | list | unique }}"
+      loop_control:
+        loop_var: service
+      when: "('free_tier_check' in ansible_run_tags) and (service not in (exceeded_usages | map(attribute='service') | list))"
+      tags:
+        - log
+        - never
