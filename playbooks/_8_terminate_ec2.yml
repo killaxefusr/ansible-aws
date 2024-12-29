@@ -3,6 +3,7 @@
   gather_facts: false
   vars_files:
     - "../host_vars/all.yml"
+    - "../host_vars/custom_date_time.yml"
   vars:
     tag_name: ""
     security_group_name: ""
