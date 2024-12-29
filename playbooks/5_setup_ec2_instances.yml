@@ -4,6 +4,7 @@
   gather_facts: false
   vars_files:
     - "../host_vars/all.yml"
+    - "../host_vars/custom_date_time.yml"
   tasks:
     - name: Get external IP address of Ansible
       uri:
@@ -22,8 +23,7 @@
     - name: Log in file for Ansible IP
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "Ansible IP: {{ external_ip.content | trim }}"
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:Ansible IP: {{ external_ip.content | trim }}"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
@@ -46,8 +46,7 @@
     - name: Log in file for existence of build sec group
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "Security group {{ ec2_security_group_build }} for build instance already exists in {{ aws_region }}"
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:Security group {{ ec2_security_group_build }} for build instance already exists in {{ aws_region }}"
       when: "'ec2_instances' in ansible_run_tags and security_group_b_info.security_groups | length > 0"
       tags:
         - log
@@ -81,8 +80,7 @@
     - name: Log in file for creation of build sec group
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "Security group with dynamic CIDR for build instance {{ ec2_security_group_build }} created in {{ aws_region }}"
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:Security group with dynamic CIDR for build instance {{ ec2_security_group_build }} created in {{ aws_region }}"
       when: "'ec2_instances' in ansible_run_tags and security_group_b.changed"
       tags:
         - log
@@ -112,8 +110,7 @@
     - name: Log in file for existence of prod sec group
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "Security group {{ ec2_security_group_prod }} for prod instance {{ ec2_security_group_prod }} already exists in {{ aws_region }}"
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:Security group {{ ec2_security_group_prod }} for prod instance {{ ec2_security_group_prod }} already exists in {{ aws_region }}"
       when: "'ec2_instances' in ansible_run_tags and security_group_p_info.security_groups | length > 0"
       tags:
         - log
@@ -154,8 +151,7 @@
     - name: Log in file for creation of prod sec group
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "Security group with dynamic CIDR for prod instance {{ ec2_security_group_prod }} created in {{ aws_region }}"
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:Security group with dynamic CIDR for prod instance {{ ec2_security_group_prod }} created in {{ aws_region }}"
       when: "'ec2_instances' in ansible_run_tags and security_group_p.changed"
       tags:
         - log
@@ -222,13 +218,12 @@
         path: "{{ log_file_path }}"
         line: >
           {% if new_ec2_build.instances is defined and new_ec2_build.instances | length > 0 %}
-            Build EC2 instance {{ ec2_instance_name_build }} created with with ID: {{ new_ec2_build.instances[0].instance_id }} and public IP {{ new_ec2_build.instances[0].public_ip_address }}.
+            {{ custom_date_time }}:Build EC2 instance {{ ec2_instance_name_build }} created with with ID: {{ new_ec2_build.instances[0].instance_id }} and public IP {{ new_ec2_build.instances[0].public_ip_address }}.
           {% elif existing_build_instance.instances is defined and existing_build_instance.instances | length > 0 %}
-            Existing Build EC2 instance {{ ec2_instance_name_build }} with ID: {{ existing_build_instance.instances[0].instance_id }} is being used with public IP: {{ existing_build_instance.instances[0].public_ip_address }}.
+            {{ custom_date_time }}:Existing Build EC2 instance {{ ec2_instance_name_build }} with ID: {{ existing_build_instance.instances[0].instance_id }} is being used with public IP: {{ existing_build_instance.instances[0].public_ip_address }}.
           {% else %}
-            ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
+            {{ custom_date_time }}:ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
-        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
@@ -292,11 +287,11 @@
         path: "{{ log_file_path }}"
         line: >
           {% if new_ec2_prod.instances is defined and new_ec2_prod.instances | length > 0 %}
-            Prod EC2 instance {{ ec2_instance_name_prod }} created with with ID: {{ new_ec2_prod.instances[0].instance_id }} and public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
+            {{ custom_date_time }}:Prod EC2 instance {{ ec2_instance_name_prod }} created with with ID: {{ new_ec2_prod.instances[0].instance_id }} and public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
           {% elif existing_prod_instance.instances is defined and existing_prod_instance.instances | length > 0 %}
-            Existing prod EC2 instance {{ ec2_instance_name_prod }} with ID: {{ existing_prod_instance.instances[0].instance_id }} is being used with public IP {{ existing_prod_instance.instances[0].public_ip_address }}.
+            {{ custom_date_time }}:Existing prod EC2 instance {{ ec2_instance_name_prod }} with ID: {{ existing_prod_instance.instances[0].instance_id }} is being used with public IP {{ existing_prod_instance.instances[0].public_ip_address }}.
           {% else %}
-            ERROR: No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
+            {{ custom_date_time }}:ERROR: No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
         insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags"
@@ -333,9 +328,7 @@
     - name: Log in file for dynamic inventory addition (build)
       lineinfile:
         path: "{{ log_file_path }}"
-        line: >-
-          "Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
@@ -365,9 +358,7 @@
     - name: Log in file for dynamic inventory addition (build)
       lineinfile:
         path: "{{ log_file_path }}"
-        line: >-
-          "Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
