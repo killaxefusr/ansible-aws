@@ -65,7 +65,7 @@
     - name: Msg for bucket creation
       debug:
         msg: "Directories 'info_ec2' and 'artifacts' ensured in bucket {{ s3_bucket }}."
-      when: 's3_setup' in ansible_run_tags
+      when: "s3_setup" in ansible_run_tags
       tags:
         - msg
         - never
@@ -73,7 +73,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "{{ custom_date_time }}:Directories 'info_aws' and 'artifacts' ensured in bucket {{ s3_bucket }}."
-      when: 's3_setup' in ansible_run_tags
+      when: "s3_setup" in ansible_run_tags
       tags:
         - log
         - never
