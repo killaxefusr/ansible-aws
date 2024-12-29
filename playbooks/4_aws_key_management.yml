@@ -78,6 +78,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
+        insertafter: "EOF"
       when: >
         "key_management" in ansible_run_tags
         and "create_key" in ansible_run_tags
@@ -118,6 +119,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Existing key '{{ aws_key_name }}' uploaded to AWS."
+        insertafter: "EOF"
       when: >
         "key_management" in ansible_run_tags
         and "upload_key" in ansible_run_tags
