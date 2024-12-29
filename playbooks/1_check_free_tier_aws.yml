@@ -79,9 +79,9 @@
         loop_var: missing_service
       when: missing_service not in (free_tier_data | map(attribute=0) | list)
     - name: Log exceeded Free Tier limits to a logfile
-      blockinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
-        block: "No usage data found for service {{ missing_service }} this month"
+        line: "{{ custom_date_time }}:No usage data found for service {{ missing_service }} this month"
       loop:
         - "Amazon Elastic Compute Cloud"
         - "Amazon Virtual Private Cloud"
@@ -108,9 +108,9 @@
       blockinfile:
         path: "{{ log_file_path }}"
         block: |
-          The following Free Tier limits have been exceeded or are at risk of exceedance:
+          {{ custom_date_time }}:The following Free Tier limits have been exceeded or are at risk of exceedance:
           {% for usage in exceeded_usages %}
-          - Service: {{ usage.service }}, UsageType: {{ usage.usageType }},
+          - {{ custom_date_time }}:Service: {{ usage.service }}, UsageType: {{ usage.usageType }},
             Actual Usage: {{ usage.actual }}, Forecasted Usage: {{ usage.forecasted }},
             Limit: {{ usage.limit }}
           {% endfor %}
@@ -127,9 +127,9 @@
         loop_var: service
       when: "('free_tier_check' in ansible_run_tags) and (service not in (exceeded_usages | map(attribute='service') | list))"
     - name: Log successful checks to logfile
-      blockinfile:
+      lineinfile:
         path: "{{ log_file_path }}"
-        block: "All checks passed for {{ service }}. No Free Tier limit exceeded."
+        line: "{{ custom_date_time }}:All checks passed for {{ service }}. No Free Tier limit exceeded."
       loop: "{{ free_tier_data | map(attribute=0) | list | unique }}"
       loop_control:
         loop_var: service
