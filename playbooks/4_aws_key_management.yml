@@ -4,6 +4,7 @@
   gather_facts: false
   vars_files:
     - "../host_vars/all.yml"
+    - "../host_vars/custom_date_time.yml"
   tasks:
     # Pre-checks for file and AWS key existence
     - name: Check if AWS key pair exists
@@ -39,8 +40,8 @@
       blockinfile:
         path: "{{ log_file_path }}"
         block: |
-          AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
-          Local key file exists: {{ local_key_file.stat.exists }}.
+          {{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
+          {{ custom_date_time }}:Local key file exists: {{ local_key_file.stat.exists }}.
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
         and "log" in ansible_run_tags
@@ -77,8 +78,7 @@
     - name: Log in file for key creation
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
       when: >
         "key_management" in ansible_run_tags
         and "create_key" in ansible_run_tags
@@ -118,8 +118,7 @@
     - name: Log in file for key upload
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "Existing key '{{ aws_key_name }}' uploaded to AWS."
-        insertafter: "EOF"
+        line: "{{ custom_date_time }}:Existing key '{{ aws_key_name }}' uploaded to AWS."
       when: >
         "key_management" in ansible_run_tags
         and "upload_key" in ansible_run_tags
