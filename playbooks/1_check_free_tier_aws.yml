@@ -79,10 +79,9 @@
         loop_var: missing_service
       when: missing_service not in (free_tier_data | map(attribute=0) | list)
     - name: Log exceeded Free Tier limits to a logfile
-      lineinfile:
+      blockinfile:
         path: "{{ log_file_path }}"
-        line: "No usage data found for service {{ missing_service }} this month"
-        insertafter: "EOF"
+        block: "No usage data found for service {{ missing_service }} this month"
       loop:
         - "Amazon Elastic Compute Cloud"
         - "Amazon Virtual Private Cloud"
