@@ -127,10 +127,9 @@
         loop_var: service
       when: "('free_tier_check' in ansible_run_tags) and (service not in (exceeded_usages | map(attribute='service') | list))"
     - name: Log successful checks to logfile
-      lineinfile:
+      blockinfile:
         path: "{{ log_file_path }}"
-        line: "All checks passed for {{ service }}. No Free Tier limit exceeded."
-        insertafter: "EOF"
+        block: "All checks passed for {{ service }}. No Free Tier limit exceeded."
       loop: "{{ free_tier_data | map(attribute=0) | list | unique }}"
       loop_control:
         loop_var: service
