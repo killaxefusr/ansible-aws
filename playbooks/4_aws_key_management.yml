@@ -69,8 +69,7 @@
       debug:
         msg: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
       when: >
-        "key_management" in ansible_run_tags
-        and "create_key" in ansible_run_tags
+        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags)
         and created_key.changed"
       tags:
         - msg
@@ -80,8 +79,7 @@
         path: "{{ log_file_path }}"
         line: "{{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
       when: >
-        "key_management" in ansible_run_tags
-        and "create_key" in ansible_run_tags
+        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags)
         and created_key.changed
       tags:
         - log
@@ -109,8 +107,7 @@
       debug:
         msg: "Existing key '{{ aws_key_name }}' uploaded to AWS."
       when: >
-        "key_management" in ansible_run_tags
-        and "upload_key" in ansible_run_tags
+        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
         and uploaded_key.changed
       tags:
         - msg
@@ -120,8 +117,7 @@
         path: "{{ log_file_path }}"
         line: "{{ custom_date_time }}:Existing key '{{ aws_key_name }}' uploaded to AWS."
       when: >
-        "key_management" in ansible_run_tags
-        and "upload_key" in ansible_run_tags
+        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
         and uploaded_key.changed
       tags:
         - log
