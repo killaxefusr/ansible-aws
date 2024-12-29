@@ -82,6 +82,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "No usage data found for service {{ missing_service }} this month"
+        insertafter: "EOF"
       loop:
         - "Amazon Elastic Compute Cloud"
         - "Amazon Virtual Private Cloud"
@@ -104,6 +105,7 @@
             Actual Usage: {{ usage.actual }}, Forecasted Usage: {{ usage.forecasted }},
             Limit: {{ usage.limit }}
           {% endfor %}
+        insertafter: "EOF"
       when: "('free_tier_check' in ansible_run_tags) and (exceeded_usages | length > 0)"
       tags:
         - log
