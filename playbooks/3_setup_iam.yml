@@ -44,11 +44,11 @@
         path: "{{ log_file_path }}"
         line: >-
           {% if policy_status == 'created' %}
-            The IAM policy '{{ iam_policy_name }}' was created.
+            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was created.
           {% elif policy_status == 'updated' %}
-            The IAM policy '{{ iam_policy_name }}' was updated.
+            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was updated.
           {% else %}
-            The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
+            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
           {% endif %}
         insertafter: "EOF"
       when: "'iam_setup' in ansible_run_tags"
@@ -101,11 +101,11 @@
         path: "{{ log_file_path }}"
         line: >-
           {% if role_status == 'created' %}
-            The IAM role '{{ iam_role_name }}' was created.
+            {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' was created.
           {% elif role_status == 'updated' %}
-            The IAM role '{{ iam_role_name }}' was updated.
+            {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' was updated.
           {% else %}
-            The IAM role '{{ iam_role_name }}' already exists and no updates were needed.
+            {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' already exists and no updates were needed.
           {% endif %}
         insertafter: "EOF"
       when: "'iam_setup' in ansible_run_tags"
