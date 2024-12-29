@@ -23,6 +23,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Ansible IP: {{ external_ip.content | trim }}"
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
@@ -46,6 +47,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group {{ ec2_security_group_build }} for build instance already exists in {{ aws_region }}"
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and security_group_b_info.security_groups | length > 0"
       tags:
         - log
@@ -80,6 +82,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group with dynamic CIDR for build instance {{ ec2_security_group_build }} created in {{ aws_region }}"
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and security_group_b.changed"
       tags:
         - log
@@ -110,6 +113,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group {{ ec2_security_group_prod }} for prod instance {{ ec2_security_group_prod }} already exists in {{ aws_region }}"
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and security_group_p_info.security_groups | length > 0"
       tags:
         - log
@@ -151,6 +155,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "Security group with dynamic CIDR for prod instance {{ ec2_security_group_prod }} created in {{ aws_region }}"
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and security_group_p.changed"
       tags:
         - log
@@ -223,6 +228,7 @@
           {% else %}
             ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
@@ -292,6 +298,7 @@
           {% else %}
             ERROR: No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {% endif %}
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
@@ -328,6 +335,7 @@
         path: "{{ log_file_path }}"
         line: >-
           "Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
@@ -359,6 +367,7 @@
         path: "{{ log_file_path }}"
         line: >-
           "Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
+        insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags"
       tags:
         - log
