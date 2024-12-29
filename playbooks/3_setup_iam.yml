@@ -50,6 +50,7 @@
           {% else %}
             The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
           {% endif %}
+        insertafter: "EOF"
       when: "'iam_setup' in ansible_run_tags"
       tags:
         - log
@@ -106,6 +107,7 @@
           {% else %}
             The IAM role '{{ iam_role_name }}' already exists and no updates were needed.
           {% endif %}
+        insertafter: "EOF"
       when: "'iam_setup' in ansible_run_tags"
       tags:
         - log
