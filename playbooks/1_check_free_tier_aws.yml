@@ -83,6 +83,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "{{ custom_date_time }}:No usage data found for service {{ missing_service }} this month"
+        insertafter: "EOF"
       loop:
         - "Amazon Elastic Compute Cloud"
         - "Amazon Virtual Private Cloud"
@@ -115,6 +116,7 @@
             Actual Usage: {{ usage.actual }}, Forecasted Usage: {{ usage.forecasted }},
             Limit: {{ usage.limit }}
           {% endfor %}
+        insertafter: "EOF"
       when: "('free_tier_check' in ansible_run_tags) and (exceeded_usages | length > 0)"
       tags:
         - log
@@ -131,6 +133,7 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: "{{ custom_date_time }}:All checks passed for {{ service }}. No Free Tier limit exceeded."
+        insertafter: "EOF"
       loop: "{{ free_tier_data | map(attribute=0) | list | unique }}"
       loop_control:
         loop_var: service
