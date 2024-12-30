@@ -71,13 +71,14 @@
         description: "ansible-aws -- Role for EC2 with S3 Access (GET/PUT/LIST)"
         managed_policies:
           - "{{ s3_access_policy.policy.arn }}"
+      register: iam_role_set_info
 
-    - name: Determine IAM Policy status
+    - name: Determine IAM role status
       set_fact:
         role_status: >-
           {%- if iam_role_info.iam_roles is undefined or iam_role_info.iam_roles | length == 0 -%}
             created
-          {%- elif iam_role_info.iam_roles[0].create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z') -%}
+          {%- elif (iam_role_info.iam_roles[0].create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z')) and (iam_role_set_info.changed) -%}
             updated
           {%- else -%}
             unchanged
