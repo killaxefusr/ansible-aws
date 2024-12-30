@@ -78,7 +78,7 @@
         role_status: >-
           {%- if iam_role_info.iam_roles is undefined or iam_role_info.iam_roles | length == 0 -%}
             created
-          {%- elif (iam_role_info.iam_roles[0].create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z')) and (iam_role_set_info.changed) -%}
+          {%- elif iam_role_set_info.changed -%}
             updated
           {%- else -%}
             unchanged
