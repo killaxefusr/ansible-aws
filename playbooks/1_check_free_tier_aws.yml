@@ -91,7 +91,7 @@
         - "AWS Data Transfer"
       loop_control:
         loop_var: missing_service
-      when: "('free_tier_check' in ansible_run_tags) and (missing_service not in (free_tier_data | map(attribute=0) | list))"
+      when: "('free_tier_check' in ansible_run_tags and 'log' in ansible_run_tags) and (missing_service not in (free_tier_data | map(attribute=0) | list))"
       tags:
         - log
         - never
