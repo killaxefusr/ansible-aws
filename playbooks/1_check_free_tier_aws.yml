@@ -117,7 +117,7 @@
             Limit: {{ usage.limit }}
           {% endfor %}
         insertafter: "EOF"
-      when: "('free_tier_check' in ansible_run_tags) and (exceeded_usages | length > 0)"
+      when: "('free_tier_check' in ansible_run_tags and 'log' in ansible_run_tags) and (exceeded_usages | length > 0)"
       tags:
         - log
         - never
@@ -137,7 +137,7 @@
       loop: "{{ free_tier_data | map(attribute=0) | list | unique }}"
       loop_control:
         loop_var: service
-      when: "('free_tier_check' in ansible_run_tags) and (service not in (exceeded_usages | map(attribute='service') | list))"
+      when: "('free_tier_check' in ansible_run_tags and 'log' in ansible_run_tags) and (service not in (exceeded_usages | map(attribute='service') | list))"
       tags:
         - log
         - never
