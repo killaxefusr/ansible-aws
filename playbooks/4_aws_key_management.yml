@@ -71,7 +71,7 @@
         msg: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
       when: >
         ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags)
-        and created_key.changed"
+        and created_key.changed
       tags:
         - msg
         - never
