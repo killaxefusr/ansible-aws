@@ -31,8 +31,7 @@
           Local key file exists: {{ local_key_file.stat.exists }}.
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
-        and "msg" in ansible_run_tags
-        and "key_management" in ansible_run_tags
+        and ("msg" in ansible_run_tags and "key_management" in ansible_run_tags)
       tags:
         - msg
         - never
@@ -45,8 +44,7 @@
         insertafter: "EOF"
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
-        and "log" in ansible_run_tags
-        and "key_management" in ansible_run_tags
+        and ("log" in ansible_run_tags and "key_management" in ansible_run_tags)
       tags:
         - log
         - never
@@ -70,7 +68,7 @@
       debug:
         msg: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
       when: >
-        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags)
+        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'msg' in ansible_run_tags)
         and created_key.changed
       tags:
         - msg
@@ -81,7 +79,7 @@
         line: "{{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
         insertafter: "EOF"
       when: >
-        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags)
+        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'log' in ansible_run_tags)
         and created_key.changed
       tags:
         - log
@@ -109,7 +107,7 @@
       debug:
         msg: "Existing key '{{ aws_key_name }}' uploaded to AWS."
       when: >
-        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
+        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags and 'msg' in ansible_run_tags)
         and uploaded_key.changed
       tags:
         - msg
@@ -120,7 +118,7 @@
         line: "{{ custom_date_time }}:Existing key '{{ aws_key_name }}' uploaded to AWS."
         insertafter: "EOF"
       when: >
-        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
+        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags and 'log' in ansible_run_tags)
         and uploaded_key.changed
       tags:
         - log
