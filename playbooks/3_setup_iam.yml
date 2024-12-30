@@ -44,11 +44,11 @@
         path: "{{ log_file_path }}"
         line: >-
           {% if policy_status == 'created' %}
-            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was created.
+          {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was created.
           {% elif policy_status == 'updated' %}
-            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was updated.
+          {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was updated.
           {% else %}
-            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
+          {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
           {% endif %}
         insertafter: "EOF"
       when: "'iam_setup' in ansible_run_tags"
