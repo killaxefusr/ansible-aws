@@ -18,23 +18,23 @@
     - name: Determine IAM Policy status
       set_fact:
         policy_status: >-
-          {% if s3_access_policy.policy.create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z') %}
-           created
-          {% elif (s3_access_policy.policy.create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') < custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z')) and (s3_access_policy.policy.update_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z')) %}
-           updated
-          {% else %}
-           unchanged
-          {% endif %}
+          {%- if s3_access_policy.policy.create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z') -%}
+            created
+          {%- elif (s3_access_policy.policy.create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') < custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z')) and (s3_access_policy.policy.update_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z')) -%}
+            updated
+          {%- else -%}
+            unchanged
+          {%- endif -%}
     - name: Notify IAM Policy status
       debug:
         msg: >-
-          {% if policy_status == 'created' %}
-           The IAM policy '{{ iam_policy_name }}' was created.
-          {% elif policy_status == 'updated' %}
-           The IAM policy '{{ iam_policy_name }}' was updated.
-          {% else %}
-           The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
-          {% endif %}
+          {%- if policy_status == 'created' -%}
+            The IAM policy '{{ iam_policy_name }}' was created.
+          {%- elif policy_status == 'updated' -%}
+            The IAM policy '{{ iam_policy_name }}' was updated.
+          {%- else -%}
+            The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
+          {%- endif -%}
       when: "'iam_setup' in ansible_run_tags"
       tags:
         - msg
@@ -43,13 +43,13 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: >-
-          {% if policy_status == 'created' %}
-           {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was created.
-          {% elif policy_status == 'updated' %}
-           {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was updated.
-          {% else %}
-           {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
-          {% endif %}
+          {%- if policy_status == 'created' -%}
+            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was created.
+          {%- elif policy_status == 'updated' -%}
+            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' was updated.
+          {%- else -%}
+            {{ custom_date_time }}:The IAM policy '{{ iam_policy_name }}' already exists and no updates were needed.
+          {%- endif -%}
         insertafter: "EOF"
       when: "'iam_setup' in ansible_run_tags"
       tags:
@@ -75,23 +75,23 @@
     - name: Determine IAM Policy status
       set_fact:
         role_status: >-
-          {% if iam_role_info.iam_roles is undefined or iam_role_info.iam_roles | length == 0 %}
-           created
-          {% elif iam_role_info.iam_roles[0].create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z') %}
-           updated
-          {% else %}
-           unchanged
-          {% endif %}
+          {%- if iam_role_info.iam_roles is undefined or iam_role_info.iam_roles | length == 0 -%}
+            created
+          {%- elif iam_role_info.iam_roles[0].create_date | to_datetime('%Y-%m-%dT%H:%M:%S%z') > custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S%z') -%}
+            updated
+          {%- else -%}
+            unchanged
+          {%- endif -%}
     - name: Notify IAM Role status
       debug:
         msg: >-
-          {% if role_status == 'created' %}
-           The IAM role '{{ iam_role_name }}' was created.
-          {% elif role_status == 'updated' %}
-           The IAM role '{{ iam_role_name }}' was updated.
-          {% else %}
-           The IAM role '{{ iam_role_name }}' already exists and no updates were needed.
-          {% endif %}
+          {%- if role_status == 'created' -%}
+            The IAM role '{{ iam_role_name }}' was created.
+          {%- elif role_status == 'updated' -%}
+            The IAM role '{{ iam_role_name }}' was updated.
+          {%- else -%}
+            The IAM role '{{ iam_role_name }}' already exists and no updates were needed.
+          {%- endif -%}
       when: "'iam_setup' in ansible_run_tags"
       tags:
         - msg
@@ -100,13 +100,13 @@
       lineinfile:
         path: "{{ log_file_path }}"
         line: >-
-          {% if role_status == 'created' %}
-           {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' was created.
-          {% elif role_status == 'updated' %}
-           {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' was updated.
-          {% else %}
-           {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' already exists and no updates were needed.
-          {% endif %}
+          {%- if role_status == 'created' -%}
+            {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' was created.
+          {%- elif role_status == 'updated' -%}
+            {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' was updated.
+          {%- else -%}
+            {{ custom_date_time }}:The IAM role '{{ iam_role_name }}' already exists and no updates were needed.
+          {%- endif -%}
         insertafter: "EOF"
       when: "'iam_setup' in ansible_run_tags"
       tags:
