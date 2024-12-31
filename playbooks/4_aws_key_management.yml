@@ -12,18 +12,18 @@
         name: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
       register: aws_key_info
-      when: "'key_management' in ansible_run_tags"
-      tags:
-        - create_key
-        - upload_key
+#      when: "'key_management' in ansible_run_tags"
+#      tags:
+#        - create_key
+#        - upload_key
     - name: Check if local key file exists
       stat:
         path: "{{ aws_ssh_private_key_file }}"
       register: local_key_file
-      when: "'key_management' in ansible_run_tags"
-      tags:
-        - create_key
-        - upload_key
+#      when: "'key_management' in ansible_run_tags"
+#      tags:
+#        - create_key
+#        - upload_key
     - name: Log message for key pair and file status
       debug:
         msg: |
@@ -57,7 +57,7 @@
         state: present
         file_name: "{{ aws_ssh_private_key_file }}"
       when: >
-        "key_management" in ansible_run_tags
+        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags)
         and (aws_key_info.keypairs is not defined and not local_key_file.stat.exists)
       tags:
         - create_key
@@ -93,7 +93,7 @@
         state: present
         key_material: "{{ lookup('file', aws_ssh_private_key_file) }}"
       when: >
-        "key_management" in ansible_run_tags
+        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
         and (local_key_file.stat.exists and aws_key_info.keypairs is not defined)
 #this when state will not go above error when "key already in aws and != aws_ssh_private_key_file" but you can add this (if you dont worry about security problem):
 #when: "key_management" in ansible_run_tags and local_key_file.stat.exists and (aws_key_info.keypairs is defined and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
