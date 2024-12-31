@@ -54,13 +54,16 @@
     - iam_setup
     - never
     
-# 4 - Create EC2 Key Pair "aws_key_name" for Ansible Access and store it at "aws_ssh_private_key_file" by "create_key" tag or upload existing key to AWS by "key_management" tag
+# 4 - Create EC2 Key Pair "aws_key_name" for Ansible Access and store it at "aws_ssh_private_key_file" by "create_key" tag 
+# or upload existing key to AWS by "key_management" tag
 - import_playbook: playbooks/4_aws_key_management.yml
   tags:
     - key_management
     - never
     
-# 5 - Create and Configure Dynamic Security Group (only 1 IP address and ports 22/80 for public) and Create and Configure 2 EC2 Instances (build-server and prod-server) with type "instance_type" and image "image_id", role "iam_role_name" and VPC "vpc_id", add them to in-memory dynamic Ansible inventory. Also add info about new EC2 Instances on localhost
+# 5 - Create and Configure 2 Dynamic Security Group (only 1 IP address and ports 22/80 for public) 
+# and Create and Configure 2 EC2 Instances (build-server and prod-server) with type "instance_type" and "image_id", role "iam_role_name" and VPC "vpc_id", 
+# and add them to in-memory dynamic Ansible inventory. 
 - import_playbook: playbooks/5_setup_ec2_instances.yml
   tags:
     - ec2_instances
