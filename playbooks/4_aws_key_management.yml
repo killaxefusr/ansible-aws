@@ -108,7 +108,7 @@
 #when: "key_management" in ansible_run_tags and local_key_file.stat.exists and (aws_key_info.keypairs | length > 0 and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
       tags:
         - upload_key
-      no_log: true
+#      no_log: true
       notify:
         - Set permissions for SSH key
       register: uploaded_key
