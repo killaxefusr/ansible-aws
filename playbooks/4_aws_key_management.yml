@@ -67,7 +67,7 @@
         file_name: "{{ aws_ssh_private_key_file }}"
       when: >
         ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags)
-        and (aws_key_info.keypairs is not defined and not local_key_file.stat.exists)
+        and ((aws_key_info.keypairs | length == 0) and not local_key_file.stat.exists)
       tags:
         - create_key
       register: created_key
@@ -103,7 +103,7 @@
         key_material: "{{ lookup('file', aws_ssh_private_key_file) }}"
       when: >
         ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
-        and (local_key_file.stat.exists and aws_key_info.keypairs is not defined)
+        and (local_key_file.stat.exists and (aws_key_info.keypairs | length == 0))
 #this when state will not go above error when "key already in aws and != aws_ssh_private_key_file" but you can add this (if you dont worry about security problem):
 #when: "key_management" in ansible_run_tags and local_key_file.stat.exists and (aws_key_info.keypairs | length > 0 and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
       tags:
