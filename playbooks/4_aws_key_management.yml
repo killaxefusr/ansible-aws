@@ -38,7 +38,7 @@
     - name: Log in file for key pair and file status
       blockinfile:
         path: "{{ log_file_path }}"
-        block: |
+        block: >
           {{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
           {{ custom_date_time }}:Local key file exists: {{ local_key_file.stat.exists }}.
         insertafter: "EOF"
