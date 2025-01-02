@@ -42,7 +42,7 @@
           {{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
           {{ custom_date_time }}:Local key file exists: {{ local_key_file.stat.exists }}.
         insertafter: "EOF"
-        marker: ""
+ #       marker: ""
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
         and ("log" in ansible_run_tags and "key_management" in ansible_run_tags)
