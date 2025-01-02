@@ -35,14 +35,22 @@
       tags:
         - msg
         - never
-    - name: Log in file for key pair and file status
-      blockinfile:
+    - name: Log in file for key pair status
+      lineinfile:
         path: "{{ log_file_path }}"
-        block: >
-          {{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
-          {{ custom_date_time }}:Local key file exists: {{ local_key_file.stat.exists }}.
+        line: "{{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}"
         insertafter: "EOF"
- #       marker: ""
+      when: >
+        ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
+        and ("log" in ansible_run_tags and "key_management" in ansible_run_tags)
+      tags:
+        - log
+        - never
+    - name: Log in file for key file status
+      lineinfile:
+        path: "{{ log_file_path }}"
+        line: "{{ custom_date_time }}:Local key file exists: {{ local_key_file.stat.exists }}"
+        insertafter: "EOF"
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
         and ("log" in ansible_run_tags and "key_management" in ansible_run_tags)
