@@ -27,7 +27,7 @@
     - name: Log message for key pair and file status
       debug:
         msg: |
-          AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}.
+          AWS Key Pair exists: {{ aws_key_info.keypairs | length > 0 }}.
           Local key file exists: {{ local_key_file.stat.exists }}.
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
@@ -38,7 +38,7 @@
     - name: Log in file for key pair status
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs is defined }}"
+        line: "{{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs | length > 0 }}"
         insertafter: "EOF"
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
@@ -105,7 +105,7 @@
         ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
         and (local_key_file.stat.exists and aws_key_info.keypairs is not defined)
 #this when state will not go above error when "key already in aws and != aws_ssh_private_key_file" but you can add this (if you dont worry about security problem):
-#when: "key_management" in ansible_run_tags and local_key_file.stat.exists and (aws_key_info.keypairs is defined and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
+#when: "key_management" in ansible_run_tags and local_key_file.stat.exists and (aws_key_info.keypairs | length > 0 and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
       tags:
         - upload_key
       no_log: true
