@@ -9,7 +9,7 @@
     # Pre-checks for file and AWS key existence
     - name: Check if AWS key pair exists
       amazon.aws.ec2_key_info:
-        name: "{{ aws_key_name }}"
+        names: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
       register: aws_key_info
 #      when: "'key_management' in ansible_run_tags"
