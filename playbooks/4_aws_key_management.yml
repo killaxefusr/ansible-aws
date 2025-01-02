@@ -100,7 +100,7 @@
         name: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
         state: present
-        key_material: "{{ lookup('file', aws_ssh_private_key_file) }}"
+        key_material: "{{ lookup('file', aws_ssh_private_key_file) }}.pub"
       when: >
         ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
         and (local_key_file.stat.exists and (aws_key_info.keypairs | length == 0))
