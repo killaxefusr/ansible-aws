@@ -18,10 +18,10 @@
     - name: Determine IAM Policy status
       set_fact:
         policy_status: >-
-          {%- if s3_access_policy.policy.create_date | to_datetime('%Y%m%d_%H%M%S') > (custom_date_time | to_datetime('%Y%m%d_%H%M%S') | strftime('%Y-%m-%dT%H:%M:%S')) -%}
+          {%- if s3_access_policy.policy.create_date | to_datetime('%Y-%m-%dT%H:%M:%S') > (custom_date_time | to_datetime('%Y%m%d_%H%M%S') | strftime('%Y-%m-%dT%H:%M:%S')) -%}
             created
-          {%- elif (s3_access_policy.policy.create_date | to_datetime('%Y%m%d_%H%M%S') < (custom_date_time | to_datetime('%Y%m%d_%H%M%S') | strftime('%Y-%m-%dT%H:%M:%S'))) 
-          and (s3_access_policy.policy.update_date | to_datetime('%Y%m%d_%H%M%S') > (custom_date_time | to_datetime('%Y%m%d_%H%M%S') | strftime('%Y-%m-%dT%H:%M:%S'))) -%}
+          {%- elif (s3_access_policy.policy.create_date | to_datetime('%Y-%m-%dT%H:%M:%S') < (custom_date_time | to_datetime('%Y%m%d_%H%M%S') | strftime('%Y-%m-%dT%H:%M:%S'))) 
+          and (s3_access_policy.policy.update_date | to_datetime('%Y-%m-%dT%H:%M:%S') > (custom_date_time | to_datetime('%Y%m%d_%H%M%S') | strftime('%Y-%m-%dT%H:%M:%S'))) -%}
             updated
           {%- else -%}
             unchanged
