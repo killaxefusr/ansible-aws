@@ -27,13 +27,20 @@
         msg: |
           AWS Key Pair {{ aws_key_name }} exists: {{ aws_key_info.keypairs | length > 0 }}.
           Local key file {{ aws_ssh_private_key_file }} exists: {{ local_key_file.stat.exists }}.
-          Public local key file {{ aws_ssh_private_key_file + '.pub' }} exists: {{ public_key_file.stat.exists }}.
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
         and ("msg" in ansible_run_tags and "key_management" in ansible_run_tags)
       tags:
         - msg
         - never
+    - name: Log message for local public key pair
+      debug:
+        msg: "Public local key file {{ aws_ssh_private_key_file + '.pub' }} exists: {{ public_key_file.stat.exists }}."
+      when: >
+        "upload_key" in ansible_run_tags and ("msg" in ansible_run_tags and "key_management" in ansible_run_tags)
+      tags:
+        - msg
+        - never        
     - name: Log in file for key pair status
       lineinfile:
         path: "{{ log_file_path }}"
@@ -62,8 +69,7 @@
         line: "{{ custom_date_time }}:Public local key file {{ aws_ssh_private_key_file + '.pub' }} exists: {{ public_key_file.stat.exists }}"
         insertafter: "EOF"
       when: >
-        ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
-        and ("log" in ansible_run_tags and "key_management" in ansible_run_tags)
+        "upload_key" in ansible_run_tags and ("log" in ansible_run_tags and "key_management" in ansible_run_tags)
       tags:
         - log
         - never
