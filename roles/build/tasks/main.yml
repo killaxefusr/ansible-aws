@@ -54,8 +54,8 @@
 - name: Build Docker image
   community.docker.docker_image:
     name: maven_build
-    tag: 
-    build: "{{ tag_date }}"
+    tag: "{{ tag_date }}"
+    build:
       path: /tmp/
       dockerfile: Dockerfile
     source: build
