@@ -107,10 +107,10 @@
           {%- else -%}
             {{ custom_date_time }}:AWS key pair '{{ aws_key_name }}' already exists and no updates were needed.
           {%- endif -%}
+        insertafter: "EOF"
       when: >
         ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'msg' in ansible_run_tags)
 #        and created_key.changed
-        insertafter: "EOF"
       tags:
         - log
         - never
