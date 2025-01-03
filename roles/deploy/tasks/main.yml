@@ -41,7 +41,7 @@
 - name: Download WAR file from S3
   amazon.aws.s3_object:
     bucket: "{{ s3_bucket }}"
-    object: "/artifacts/hello-1.0_{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}.war"
+    object: '/artifacts/hello-1.0_{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}.war'
     dest: /tmp/hello-1.0.war
     mode: get
     region: "{{ aws_region }}"
