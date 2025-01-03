@@ -1,6 +1,6 @@
 - name: Set the tag by date
   set_fact:
-    tag_date: "{{ custom_date_time | to_datetime | strftime('%Y-%m-%d-%H-%M-%S') }}"
+    tag_date: "{{ custom_date_time | strftime('%Y-%m-%d-%H-%M-%S') }}"
 - name: Install required system packages
   apt:
     pkg:
