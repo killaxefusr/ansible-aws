@@ -234,10 +234,11 @@
       tags:
         - log
         - never
+
     - name: Fail if no build instance exists or is created
       fail:
         msg: "No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook."
-      when: (new_ec2_build.instances is not defined and new_ec2_build.instances | length == 0) and (existing_build_instance.instances is not defined or existing_build_instance.instances | length == 0)
+      when: (new_ec2_build.instances is not defined or new_ec2_build.instances | length == 0) and (existing_build_instance.instances is not defined or existing_build_instance.instances | length == 0)
 
     - name: Check if prod EC2 instance exists
       amazon.aws.ec2_instance_info:
@@ -293,11 +294,11 @@
         path: "{{ log_file_path }}"
         line: >
           {%- if new_ec2_prod.instances is defined and new_ec2_prod.instances | length > 0 -%}
-          {{ custom_date_time }}:Prod EC2 instance {{ ec2_instance_name_prod }} created with with ID: {{ new_ec2_prod.instances[0].instance_id }} and public IP {{ new_ec2_prod.instances[0].public_ip_address }}.
+          {{ custom_date_time }}: Prod EC2 instance {{ ec2_instance_name_prod }} created with ID: {{ new_ec2_prod.instances[0].instance_id }} and public IP: {{ new_ec2_prod.instances[0].public_ip_address }}
           {%- elif existing_prod_instance.instances is defined and existing_prod_instance.instances | length > 0 -%}
-          {{ custom_date_time }}:Existing prod EC2 instance {{ ec2_instance_name_prod }} with ID: {{ existing_prod_instance.instances[0].instance_id }} is being used with public IP {{ existing_prod_instance.instances[0].public_ip_address }}.
+          {{ custom_date_time }}: Existing Prod EC2 instance {{ ec2_instance_name_prod }} with ID: {{ existing_prod_instance.instances[0].instance_id }} is being used with public IP: {{ existing_prod_instance.instances[0].public_ip_address }}
           {%- else -%}
-          {{ custom_date_time }}:ERROR: No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
+          {{ custom_date_time }}: ERROR: No Prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {%- endif -%}
         insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and 'log' in ansible_run_tags"
@@ -308,7 +309,7 @@
     - name: Fail if no prod instance exists or is created
       fail:
         msg: "No prod EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook."
-      when: (new_ec2_prod.instances is not defined and  new_ec2_prod.instances | length == 0) and (existing_prod_instance.instances is not defined or existing_prod_instance.instances | length == 0)
+      when: (new_ec2_prod.instances is not defined or new_ec2_prod.instances | length == 0) and (existing_prod_instance.instances is not defined or existing_prod_instance.instances | length == 0)
 
     - name: Determine the public IP for build
       set_fact:
