@@ -6,7 +6,6 @@
     - "../host_vars/all.yml"
     - "../host_vars/custom_date_time.yml"
   tasks:
-    # Pre-checks for file and AWS key existence
     - name: Check if AWS key pair exists
       amazon.aws.ec2_key_info:
         names: "{{ aws_key_name }}"
@@ -84,7 +83,6 @@
         - Set permissions for SSH key
     - name: Log message for key creation
       debug:
-#        msg: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
         msg: >-
           {%- if created_key.changed -%}
             New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}
@@ -92,15 +90,13 @@
             AWS key pair '{{ aws_key_name }}' already exists and no updates were needed.
           {%- endif -%}
       when: >
-        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'msg' in ansible_run_tags)
-#        and created_key.changed
+        "key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'msg' in ansible_run_tags
       tags:
         - msg
         - never
     - name: Log in file for key creation
       lineinfile:
         path: "{{ log_file_path }}"
-#        line: "{{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
         line: >-
           {%- if created_key.changed -%}
             {{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}
@@ -109,8 +105,7 @@
           {%- endif -%}
         insertafter: "EOF"
       when: >
-        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'log' in ansible_run_tags)
-#        and created_key.changed
+        "key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'log' in ansible_run_tags
       tags:
         - log
         - never
@@ -135,21 +130,29 @@
       register: uploaded_key
     - name: Log message for key creation
       debug:
-        msg: "Existing key '{{ aws_key_name }}' uploaded to AWS."
+        msg: >-
+          {%- if uploaded_key.changed -%}
+            Existing key '{{ aws_key_name }}' uploaded to AWS
+          {%- else -%}
+            Existing key '{{ aws_key_name }}' (probably) already exists in AWS and no updates were needed
+          {%- endif -%}
       when: >
-        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags and 'msg' in ansible_run_tags)
-        and uploaded_key.changed
+        "key_management" in ansible_run_tags and "upload_key" in ansible_run_tags and 'msg' in ansible_run_tags
       tags:
         - msg
         - never
-    - name: Log in file for key upload
+    - name: Log in file for key creation
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ custom_date_time }}:Existing key '{{ aws_key_name }}' uploaded to AWS."
+        line: >-
+          {%- if uploaded_key.changed -%}
+            {{ custom_date_time }}:Existing key '{{ aws_key_name }}' uploaded to AWS
+          {%- else -%}
+            {{ custom_date_time }}:Existing key '{{ aws_key_name }}' (probably) already exists in AWS and no updates were needed
+          {%- endif -%}
         insertafter: "EOF"
       when: >
-        ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags and 'log' in ansible_run_tags)
-        and uploaded_key.changed
+        "key_management" in ansible_run_tags and "upload_key" in ansible_run_tags and 'log' in ansible_run_tags
       tags:
         - log
         - never
