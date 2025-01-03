@@ -314,9 +314,9 @@
     - name: Determine the public IP for build
       set_fact:
         public_ip_build: >
-           {{ existing_build_instance.instances[0].public_ip_address
+           {{ (existing_build_instance.instances[0].public_ip_address
              if existing_build_instance.instances | length > 0
-             else new_ec2_build.instances[0].public_ip_address }}
+             else new_ec2_build.instances[0].public_ip_address) | trim }}
     - name: Add EC2 build instance to dynamic inventory
       add_host:
         name: "{{ ec2_instance_name_build }}"
@@ -345,9 +345,9 @@
     - name: Determine the public IP for prod
       set_fact:
         public_ip_prod: >
-           {{ existing_prod_instance.instances[0].public_ip_address
+           {{ (existing_prod_instance.instances[0].public_ip_address
              if existing_prod_instance.instances | length > 0
-             else new_ec2_prod.instances[0].public_ip_address }}
+             else new_ec2_prod.instances[0].public_ip_address) | trim }}
     - name: Add EC2 prod instance to dynamic inventory
       add_host:
         name: "{{ ec2_instance_name_prod }}"
@@ -366,7 +366,7 @@
     - name: Log in file for dynamic inventory addition (prod)
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ custom_date_time }}:Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod | trim }}"
+        line: "{{ custom_date_time }}:Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
         insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and 'log' in ansible_run_tags"
       tags:
