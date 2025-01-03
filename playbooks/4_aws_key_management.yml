@@ -109,7 +109,7 @@
           {%- endif -%}
         insertafter: "EOF"
       when: >
-        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'msg' in ansible_run_tags)
+        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'log' in ansible_run_tags)
 #        and created_key.changed
       tags:
         - log
