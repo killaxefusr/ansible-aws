@@ -51,7 +51,7 @@
 - name: Build Docker image
   community.docker.docker_image:
     name: maven_build
-    tag: "{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}"
+    tag: '{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}'
     build:
       path: /tmp/
       dockerfile: Dockerfile
@@ -60,7 +60,7 @@
 - name: Run Maven build
   community.docker.docker_container:
     name: maven_build_container
-    image: maven_build:"{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}"
+    image: maven_build:'{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}'
     state: started
     recreate: true
     volumes:
@@ -75,12 +75,12 @@
   retries: 15
   delay: 10
 - name: Rename WAR file with timestamp
-  command: "mv /tmp/maven_build/hello-1.0.war /tmp/maven_build/hello-1.0_{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}.war"
+  command: 'mv /tmp/maven_build/hello-1.0.war /tmp/maven_build/hello-1.0_{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}.war'
 - name: Upload WAR file to S3
   amazon.aws.s3_object:
     bucket: "{{ s3_bucket }}"
-    object: "/artifacts/hello-1.0_{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}.war"
-    src: "/tmp/maven_build/hello-1.0_{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}.war"
+    object: '/artifacts/hello-1.0_{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}.war'
+    src: '/tmp/maven_build/hello-1.0_{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}.war'
     mode: put
     permission: []
     region: "{{ aws_region }}"
