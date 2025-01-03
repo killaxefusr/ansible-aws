@@ -48,9 +48,9 @@
     src: files/Dockerfile
     dest: /tmp/Dockerfile
     force: yes
-- name: Set the security group ID for prod server
+- name: Set the tag by date
   set_fact:
-    tag_date: '{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") | strftime }}'
+    tag_date: "{{ custom_date_time | to_datetime('%Y-%m-%dT%H:%M:%S') | strftime('%Y-%m-%d-%H-%M-%S') }}"
 - name: Build Docker image
   community.docker.docker_image:
     name: maven_build
