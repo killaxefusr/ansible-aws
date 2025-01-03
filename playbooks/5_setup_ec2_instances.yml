@@ -360,7 +360,7 @@
       debug:
         msg: >-
           "Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
-        when: "'ec2_instances' in ansible_run_tags and 'msg' in ansible_run_tags"
+      when: "'ec2_instances' in ansible_run_tags and 'msg' in ansible_run_tags"
       tags:
         - msg
         - never
