@@ -51,7 +51,7 @@
 - name: Build Docker image
   community.docker.docker_image:
     name: maven_build
-    tag: "{{ custom_date_time }}"
+    tag: "{{ custom_date_time | to_datetime("%Y-%m-%d-%H-%M-%S") }}"
     build:
       path: /tmp/
       dockerfile: Dockerfile
