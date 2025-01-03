@@ -335,8 +335,7 @@
     - name: Log in file for dynamic inventory addition (build)
       lineinfile:
         path: "{{ log_file_path }}"
-        line: >-
-          {{ custom_date_time }}:Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}
+        line: "{{ custom_date_time }}:Added to dynamic inventory build EC2 instance '{{ ec2_instance_name_build }}' with public IP {{ public_ip_build }}"
         insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and 'log' in ansible_run_tags"
       tags:
@@ -367,8 +366,7 @@
     - name: Log in file for dynamic inventory addition (prod)
       lineinfile:
         path: "{{ log_file_path }}"
-        line: >-
-          {{ custom_date_time }}:Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}
+        line: "{{ custom_date_time }}:Added to dynamic inventory prod EC2 instance '{{ ec2_instance_name_prod }}' with public IP {{ public_ip_prod }}"
         insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and 'log' in ansible_run_tags"
       tags:
