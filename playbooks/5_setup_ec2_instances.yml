@@ -324,6 +324,11 @@
         ansible_user: ubuntu
         ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
         groups: "{{ ec2_instance_env_build }}"
+    - name: Add the dynamic C2 build instance to known_hosts
+      known_hosts:
+        path: ~/.ssh/known_hosts
+        name: "{{ public_ip_build | trim }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + (public_ip_build | trim)) }}"
     - name: Log message for dynamic inventory addition (build)
       debug:
         msg: >-
@@ -355,6 +360,11 @@
         ansible_user: ubuntu
         ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
         groups: "{{ ec2_instance_env_prod }}"
+    - name: Add the dynamic C2 build instance to known_hosts
+      known_hosts:
+        path: ~/.ssh/known_hosts
+        name: "{{ public_ip_prod | trim }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + (public_ip_prod | trim)) }}"
     - name: Log message for dynamic inventory addition (prod)
       debug:
         msg: >-
