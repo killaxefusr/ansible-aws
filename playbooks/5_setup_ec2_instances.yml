@@ -92,7 +92,7 @@
     - name: Set the security group ID for build server
       set_fact:
         security_group_b_id: >-
-          {{ (security_group_b_info.security_groups[0].id 
+          {{ (security_group_b_info.security_groups[0].group_id 
               if security_group_b_info.security_groups | length > 0 
               else security_group_b.group_id) }}
 
@@ -165,7 +165,7 @@
     - name: Set the security group ID for prod server
       set_fact:
         security_group_p_id: >-
-          {{ (security_group_p_info.security_groups[0].id 
+          {{ (security_group_p_info.security_groups[0].group_id 
               if security_group_p_info.security_groups | length > 0 
               else security_group_p.group_id) }}
 
