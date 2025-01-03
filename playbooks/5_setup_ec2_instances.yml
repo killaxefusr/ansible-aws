@@ -182,7 +182,7 @@
       amazon.aws.ec2_instance:
         key_name: "{{ aws_key_name }}"
         instance_type: "{{ instance_type }}"
-        image: "{{ image_id }}"
+        image_id: "{{ image_id }}"
         wait: true
         state: started
         region: "{{ aws_region }}"
@@ -252,7 +252,7 @@
       amazon.aws.ec2_instance:
         key_name: "{{ aws_key_name }}"
         instance_type: "{{ instance_type }}"
-        image: "{{ image_id }}"
+        image_id: "{{ image_id }}"
         wait: true
         state: started
         region: "{{ aws_region }}"
