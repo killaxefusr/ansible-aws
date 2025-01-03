@@ -24,9 +24,9 @@
     - name: Log message for key pair and file status
       debug:
         msg: |
-          AWS Key Pair exists: {{ aws_key_info.keypairs | length > 0 }}.
-          Local key file exists: {{ local_key_file.stat.exists }}.
-          Public key file exists: {{ public_key_file.stat.exists }}.
+          AWS Key Pair {{ aws_key_name }} exists: {{ aws_key_info.keypairs | length > 0 }}.
+          Local key file {{ aws_ssh_private_key_file }} exists: {{ local_key_file.stat.exists }}.
+          Public local key file {{ aws_ssh_private_key_file + '.pub' }} exists: {{ public_key_file.stat.exists }}.
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
         and ("msg" in ansible_run_tags and "key_management" in ansible_run_tags)
@@ -36,7 +36,7 @@
     - name: Log in file for key pair status
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ custom_date_time }}:AWS Key Pair exists: {{ aws_key_info.keypairs | length > 0 }}"
+        line: "{{ custom_date_time }}:AWS Key Pair {{ aws_key_name }} exists: {{ aws_key_info.keypairs | length > 0 }}"
         insertafter: "EOF"
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
@@ -47,7 +47,7 @@
     - name: Log in file for local key file status
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ custom_date_time }}:Local key file exists: {{ local_key_file.stat.exists }}"
+        line: "{{ custom_date_time }}:Local key file {{ aws_ssh_private_key_file }} exists: {{ local_key_file.stat.exists }}"
         insertafter: "EOF"
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
@@ -58,7 +58,7 @@
     - name: Log in file for local public key file status
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ custom_date_time }}:Local public key file exists: {{ public_key_file.stat.exists }}"
+        line: "{{ custom_date_time }}:Public local key file {{ aws_ssh_private_key_file + '.pub' }} exists: {{ public_key_file.stat.exists }}"
         insertafter: "EOF"
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
@@ -84,21 +84,33 @@
         - Set permissions for SSH key
     - name: Log message for key creation
       debug:
-        msg: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
+#        msg: "New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
+        msg: >-
+          {%- if created_key.changed -%}
+            New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}
+          {%- else -%}
+            AWS key pair '{{ aws_key_name }}' already exists and no updates were needed.
+          {%- endif -%}
       when: >
         ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'msg' in ansible_run_tags)
-        and created_key.changed
+#        and created_key.changed
       tags:
         - msg
         - never
     - name: Log in file for key creation
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
-        insertafter: "EOF"
+#        line: "{{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}"
+        line: >-
+          {%- if created_key.changed -%}
+            {{ custom_date_time }}:New AWS key pair '{{ aws_key_name }}' created and saved locally in {{ aws_ssh_private_key_file }}
+          {%- else -%}
+            {{ custom_date_time }}:AWS key pair '{{ aws_key_name }}' already exists and no updates were needed.
+          {%- endif -%}
       when: >
-        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'log' in ansible_run_tags)
-        and created_key.changed
+        ("key_management" in ansible_run_tags and "create_key" in ansible_run_tags and 'msg' in ansible_run_tags)
+#        and created_key.changed
+        insertafter: "EOF"
       tags:
         - log
         - never
