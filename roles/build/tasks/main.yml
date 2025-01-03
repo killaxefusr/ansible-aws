@@ -75,7 +75,7 @@
   retries: 15
   delay: 10
 - name: Rename WAR file with timestamp
-  command: "mv /tmp/maven_build/hello-1.0.war /tmp/maven_build/hello-1.0_{{ custom_date_time }}"
+  command: "mv /tmp/maven_build/hello-1.0.war /tmp/maven_build/hello-1.0_{{ custom_date_time }}.war"
 - name: Upload WAR file to S3
   amazon.aws.s3_object:
     bucket: "{{ s3_bucket }}"
