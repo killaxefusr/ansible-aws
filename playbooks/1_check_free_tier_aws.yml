@@ -124,7 +124,7 @@
 
     - name: Msg successful checks for services without exceeding limits
       debug:
-        msg: "All checks passed for {{ service }}. No Free Tier limit exceeded."
+        msg: "All checks passed for {{ service }}. No Free Tier limit exceeded for this service"
       loop: "{{ free_tier_data | map(attribute=0) | list | unique }}"
       loop_control:
         loop_var: service
@@ -132,7 +132,7 @@
     - name: Log successful checks to logfile
       lineinfile:
         path: "{{ log_file_path }}"
-        line: "{{ custom_date_time }}:All checks passed for {{ service }}. No Free Tier limit exceeded."
+        line: "{{ custom_date_time }}:All checks passed for {{ service }}. No Free Tier limit exceeded for this service"
         insertafter: "EOF"
       loop: "{{ free_tier_data | map(attribute=0) | list | unique }}"
       loop_control:
