@@ -320,7 +320,7 @@
     - name: Add EC2 build instance to dynamic inventory
       add_host:
         name: "{{ ec2_instance_name_build }}"
-        ansible_host: "{{ public_ip_build }}"
+        ansible_host: "{{ public_ip_build | trim }}"
         ansible_user: ubuntu
         ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
         groups: "{{ ec2_instance_env_build }}"
@@ -351,7 +351,7 @@
     - name: Add EC2 prod instance to dynamic inventory
       add_host:
         name: "{{ ec2_instance_name_prod }}"
-        ansible_host: "{{ public_ip_prod }}"
+        ansible_host: "{{ public_ip_prod | trim }}"
         ansible_user: ubuntu
         ansible_private_key_file: "{{ aws_ssh_private_key_file }}"
         groups: "{{ ec2_instance_env_prod }}"
