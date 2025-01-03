@@ -223,11 +223,11 @@
         path: "{{ log_file_path }}"
         line: >
           {%- if new_ec2_build.instances is defined and new_ec2_build.instances | length > 0 -%}
-          {{ custom_date_time }}:Build EC2 instance {{ ec2_instance_name_build }} created with with ID: {{ new_ec2_build.instances[0].instance_id }} and public IP {{ new_ec2_build.instances[0].public_ip_address }}
+          {{ custom_date_time }}: Build EC2 instance {{ ec2_instance_name_build }} created with ID: {{ new_ec2_build.instances[0].instance_id }} and public IP: {{ new_ec2_build.instances[0].public_ip_address }}
           {%- elif existing_build_instance.instances is defined and existing_build_instance.instances | length > 0 -%}
-          {{ custom_date_time }}:Existing Build EC2 instance {{ ec2_instance_name_build }} with ID: {{ existing_build_instance.instances[0].instance_id }} is being used with public IP: {{ existing_build_instance.instances[0].public_ip_address }}.
+          {{ custom_date_time }}: Existing Build EC2 instance {{ ec2_instance_name_build }} with ID: {{ existing_build_instance.instances[0].instance_id }} is being used with public IP: {{ existing_build_instance.instances[0].public_ip_address }}
           {%- else -%}
-          {{ custom_date_time }}:ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
+          {{ custom_date_time }}: ERROR: No build EC2 instance was found or successfully created. Investigate AWS EC2 or your playbook.
           {%- endif -%}
         insertafter: "EOF"
       when: "'ec2_instances' in ansible_run_tags and 'log' in ansible_run_tags"
