@@ -12,23 +12,21 @@
         names: "{{ aws_key_name }}"
         region: "{{ aws_region }}"
       register: aws_key_info
-#      when: "'key_management' in ansible_run_tags"
-#      tags:
-#        - create_key
-#        - upload_key
     - name: Check if local key file exists
       stat:
         path: "{{ aws_ssh_private_key_file }}"
       register: local_key_file
-#      when: "'key_management' in ansible_run_tags"
-#      tags:
-#        - create_key
-#        - upload_key
+    - name: Ensure public key file exists
+      stat:
+        path: "{{ aws_ssh_private_key_file + '.pub' }}"
+      register: public_key_file
+      
     - name: Log message for key pair and file status
       debug:
         msg: |
           AWS Key Pair exists: {{ aws_key_info.keypairs | length > 0 }}.
           Local key file exists: {{ local_key_file.stat.exists }}.
+          Public key file exists: {{ public_key_file.stat.exists }}.
       when: >
         ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
         and ("msg" in ansible_run_tags and "key_management" in ansible_run_tags)
@@ -46,7 +44,7 @@
       tags:
         - log
         - never
-    - name: Log in file for key file status
+    - name: Log in file for local key file status
       lineinfile:
         path: "{{ log_file_path }}"
         line: "{{ custom_date_time }}:Local key file exists: {{ local_key_file.stat.exists }}"
@@ -57,7 +55,18 @@
       tags:
         - log
         - never
-
+    - name: Log in file for local public key file status
+      lineinfile:
+        path: "{{ log_file_path }}"
+        line: "{{ custom_date_time }}:Local public key file exists: {{ public_key_file.stat.exists }}"
+        insertafter: "EOF"
+      when: >
+        ("create_key" in ansible_run_tags or "upload_key" in ansible_run_tags)
+        and ("log" in ansible_run_tags and "key_management" in ansible_run_tags)
+      tags:
+        - log
+        - never
+        
     # Create new key if AWS key is missing and local file doesn't exist + tag create_key
     - name: Create new AWS key pair and save locally
       amazon.aws.ec2_key:
@@ -103,9 +112,9 @@
         key_material: "{{ lookup('file', aws_ssh_private_key_file + '.pub') }}"
       when: >
         ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags)
-        and (local_key_file.stat.exists and (aws_key_info.keypairs | length == 0))
+        and ((local_key_file.stat.exists and public_key_file.stat.exists) and (aws_key_info.keypairs | length == 0))
 #this when state will not go above error when "key already in aws and != aws_ssh_private_key_file" but you can add this (if you dont worry about security problem):
-#when: "key_management" in ansible_run_tags and local_key_file.stat.exists and (aws_key_info.keypairs | length > 0 and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
+#when: ("key_management" in ansible_run_tags and "upload_key" in ansible_run_tags) and (local_key_file.stat.exists and public_key_file.stat.exists) and (aws_key_info.keypairs | length > 0 and aws_key_info.keypairs[0].key_fingerprint != lookup('file', aws_ssh_private_key_file) | fingerprint('sha256')
       tags:
         - upload_key
 #      no_log: true
