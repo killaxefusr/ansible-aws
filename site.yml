@@ -111,7 +111,7 @@
   tasks:
     - name: Display application URL
       debug:
-        msg: "The application should be available at http://{{ public_ip_prod }}:80/hello-1.0/"
+        msg: "The application should be available at http://{{ public_ip_prod | trim }}:80/hello-1.0/"
   tags:
     - production_server
     - never
